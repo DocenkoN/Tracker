@@ -1,10 +1,3 @@
-//
-//  Tracker_NewTests.swift
-//  Tracker_NewTests
-//
-//  Created by Nikolay on 06.11.2025.
-//
-
 import Testing
 @testable import Tracker_New
 
