@@ -22,16 +22,27 @@ final class TrackersViewController: UIViewController {
     
     private var currentDate = Date()
     
-    private lazy var datePicker: UIDatePicker = {
-        let picker = UIDatePicker()
-        picker.datePickerMode = .date
-        picker.preferredDatePickerStyle = .compact
-        picker.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0) // rgba(240, 240, 240, 1)
-        picker.layer.cornerRadius = 8
-        picker.translatesAutoresizingMaskIntoConstraints = false
-        picker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
-        picker.locale = Locale(identifier: "ru_RU")
-        return picker
+    private lazy var dateButton: UIButton = {
+        var configuration = UIButton.Configuration.plain()
+        configuration.background.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+        configuration.background.cornerRadius = 8
+        configuration.baseForegroundColor = .black
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        
+        // Устанавливаем текущую дату
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yy"
+        configuration.title = dateFormatter.string(from: currentDate)
+        
+        var attributedTitle = AttributedString(dateFormatter.string(from: currentDate))
+        attributedTitle.font = .systemFont(ofSize: 17, weight: .regular)
+        configuration.attributedTitle = attributedTitle
+        
+        let button = UIButton(configuration: configuration)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(dateButtonTapped), for: .touchUpInside)
+        
+        return button
     }()
     
     private lazy var titleLabel: UILabel = {
@@ -95,7 +106,7 @@ final class TrackersViewController: UIViewController {
         view.backgroundColor = .white
         
         view.addSubview(addButton)
-        view.addSubview(datePicker)
+        view.addSubview(dateButton)
         view.addSubview(titleLabel)
         view.addSubview(searchBar)
         view.addSubview(collectionView)
@@ -109,11 +120,10 @@ final class TrackersViewController: UIViewController {
             addButton.widthAnchor.constraint(equalToConstant: 42),
             addButton.heightAnchor.constraint(equalToConstant: 42),
             
-            // Date picker (77x34 согласно Figma)
-            datePicker.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
-            datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            datePicker.widthAnchor.constraint(equalToConstant: 77),
-            datePicker.heightAnchor.constraint(equalToConstant: 34),
+            // Date button
+            dateButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+            dateButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            dateButton.heightAnchor.constraint(equalToConstant: 34),
             
             // Title (SF Pro Bold 34, line height 40.8)
             titleLabel.topAnchor.constraint(equalTo: addButton.bottomAnchor, constant: 1),
@@ -152,9 +162,43 @@ final class TrackersViewController: UIViewController {
         present(newHabitVC, animated: true)
     }
     
-    @objc private func dateChanged() {
-        currentDate = datePicker.date
-        filterTrackers()
+    @objc private func dateButtonTapped() {
+        let alertController = UIAlertController(title: "Выбор даты", message: "\n\n\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
+        
+        let datePicker = UIDatePicker()
+        datePicker.datePickerMode = .date
+        datePicker.preferredDatePickerStyle = .wheels
+        datePicker.locale = Locale(identifier: "ru_RU")
+        datePicker.date = currentDate
+        datePicker.frame = CGRect(x: 0, y: 20, width: alertController.view.bounds.width - 20, height: 200)
+        
+        alertController.view.addSubview(datePicker)
+        
+        let selectAction = UIAlertAction(title: "Готово", style: .default) { [weak self] _ in
+            guard let self = self else { return }
+            self.currentDate = datePicker.date
+            
+            // Обновляем текст кнопки используя новый API
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "dd.MM.yy"
+            let dateString = dateFormatter.string(from: self.currentDate)
+            
+            var configuration = self.dateButton.configuration
+            var attributedTitle = AttributedString(dateString)
+            attributedTitle.font = .systemFont(ofSize: 17, weight: .regular)
+            configuration?.attributedTitle = attributedTitle
+            self.dateButton.configuration = configuration
+            
+            // Фильтруем трекеры
+            self.filterTrackers()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        
+        alertController.addAction(selectAction)
+        alertController.addAction(cancelAction)
+        
+        present(alertController, animated: true)
     }
     
     private func filterTrackers() {
