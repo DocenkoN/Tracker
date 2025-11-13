@@ -22,27 +22,32 @@ final class TrackersViewController: UIViewController {
     
     private var currentDate = Date()
     
-    private lazy var dateButton: UIButton = {
-        var configuration = UIButton.Configuration.plain()
-        configuration.background.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
-        configuration.background.cornerRadius = 8
-        configuration.baseForegroundColor = .black
-        configuration.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+    private lazy var datePicker: UIDatePicker = {
+        let picker = UIDatePicker()
+        picker.datePickerMode = .date
+        picker.preferredDatePickerStyle = .compact
+        picker.translatesAutoresizingMaskIntoConstraints = false
+        picker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
+        picker.locale = Locale(identifier: "ru_RU")
+        return picker
+    }()
+    
+    private lazy var dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.textColor = .black
+        label.textAlignment = .center
+        label.backgroundColor = UIColor(red: 240/255, green: 240/255, blue: 240/255, alpha: 1.0)
+        label.layer.cornerRadius = 8
+        label.clipsToBounds = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isUserInteractionEnabled = false
         
-        // Устанавливаем текущую дату
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd.MM.yy"
-        configuration.title = dateFormatter.string(from: currentDate)
+        label.text = dateFormatter.string(from: currentDate)
         
-        var attributedTitle = AttributedString(dateFormatter.string(from: currentDate))
-        attributedTitle.font = .systemFont(ofSize: 17, weight: .regular)
-        configuration.attributedTitle = attributedTitle
-        
-        let button = UIButton(configuration: configuration)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.addTarget(self, action: #selector(dateButtonTapped), for: .touchUpInside)
-        
-        return button
+        return label
     }()
     
     private lazy var titleLabel: UILabel = {
@@ -100,13 +105,29 @@ final class TrackersViewController: UIViewController {
         filterTrackers()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        hideDatePickerText()
+    }
+    
+    private func hideDatePickerText() {
+        datePicker.subviews.forEach { view in
+            view.subviews.forEach { subview in
+                if let label = subview as? UILabel {
+                    label.textColor = .clear
+                }
+            }
+        }
+    }
+    
     // MARK: - Setup
     
     private func setupUI() {
         view.backgroundColor = .white
         
         view.addSubview(addButton)
-        view.addSubview(dateButton)
+        view.addSubview(datePicker)
+        view.addSubview(dateLabel) // Label сверху
         view.addSubview(titleLabel)
         view.addSubview(searchBar)
         view.addSubview(collectionView)
@@ -120,10 +141,17 @@ final class TrackersViewController: UIViewController {
             addButton.widthAnchor.constraint(equalToConstant: 42),
             addButton.heightAnchor.constraint(equalToConstant: 42),
             
-            // Date button
-            dateButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
-            dateButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            dateButton.heightAnchor.constraint(equalToConstant: 34),
+            // Date label
+            dateLabel.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+            dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            dateLabel.widthAnchor.constraint(equalToConstant: 77),
+            dateLabel.heightAnchor.constraint(equalToConstant: 34),
+            
+            // Date picker (поверх label, невидимый но кликабельный)
+            datePicker.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor),
+            datePicker.centerXAnchor.constraint(equalTo: dateLabel.centerXAnchor),
+            datePicker.widthAnchor.constraint(equalTo: dateLabel.widthAnchor),
+            datePicker.heightAnchor.constraint(equalTo: dateLabel.heightAnchor),
             
             // Title (SF Pro Bold 34, line height 40.8)
             titleLabel.topAnchor.constraint(equalTo: addButton.bottomAnchor, constant: 1),
@@ -162,43 +190,20 @@ final class TrackersViewController: UIViewController {
         present(newHabitVC, animated: true)
     }
     
-    @objc private func dateButtonTapped() {
-        let alertController = UIAlertController(title: "Выбор даты", message: "\n\n\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
+    @objc private func dateChanged() {
+        currentDate = datePicker.date
         
-        let datePicker = UIDatePicker()
-        datePicker.datePickerMode = .date
-        datePicker.preferredDatePickerStyle = .wheels
-        datePicker.locale = Locale(identifier: "ru_RU")
-        datePicker.date = currentDate
-        datePicker.frame = CGRect(x: 0, y: 20, width: alertController.view.bounds.width - 20, height: 200)
+        // Обновляем label
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yy"
+        dateLabel.text = dateFormatter.string(from: currentDate)
         
-        alertController.view.addSubview(datePicker)
-        
-        let selectAction = UIAlertAction(title: "Готово", style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            self.currentDate = datePicker.date
-            
-            // Обновляем текст кнопки используя новый API
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "dd.MM.yy"
-            let dateString = dateFormatter.string(from: self.currentDate)
-            
-            var configuration = self.dateButton.configuration
-            var attributedTitle = AttributedString(dateString)
-            attributedTitle.font = .systemFont(ofSize: 17, weight: .regular)
-            configuration?.attributedTitle = attributedTitle
-            self.dateButton.configuration = configuration
-            
-            // Фильтруем трекеры
-            self.filterTrackers()
+        // Скрываем системный текст picker после изменения
+        DispatchQueue.main.async { [weak self] in
+            self?.hideDatePickerText()
         }
         
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
-        
-        alertController.addAction(selectAction)
-        alertController.addAction(cancelAction)
-        
-        present(alertController, animated: true)
+        filterTrackers()
     }
     
     private func filterTrackers() {
