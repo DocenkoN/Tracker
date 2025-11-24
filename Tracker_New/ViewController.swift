@@ -1,10 +1,3 @@
-//
-//  ViewController.swift
-//  Tracker_New
-//
-//  Created by Nikolay on 06.11.2025.
-//
-
 import UIKit
 
 class ViewController: UIViewController {
