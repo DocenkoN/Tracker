@@ -8,6 +8,12 @@ final class TrackersViewController: UIViewController {
     var completedTrackers: Set<TrackerRecord> = []
     private var visibleCategories: [TrackerCategory] = []
     
+    // MARK: - Core Data Stores
+    
+    private let trackerStore = TrackerStore()
+    private let trackerCategoryStore = TrackerCategoryStore()
+    private let trackerRecordStore = TrackerRecordStore()
+    
     // MARK: - UI Elements
     
     private lazy var addButton: UIButton = {
@@ -102,7 +108,38 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        setupStores()
+        loadData()
+    }
+    
+    private func setupStores() {
+        trackerStore.delegate = self
+        trackerCategoryStore.delegate = self
+        trackerRecordStore.delegate = self
+    }
+    
+    private func loadData() {
+        loadCategories()
+        loadCompletedTrackers()
         filterTrackers()
+    }
+    
+    private func loadCategories() {
+        do {
+            let categoriesCoreData = try trackerCategoryStore.fetchCategories()
+            categories = trackerCategoryStore.convertToCategories(categoriesCoreData, trackerStore: trackerStore)
+        } catch {
+            print("Ошибка загрузки категорий: \(error)")
+        }
+    }
+    
+    private func loadCompletedTrackers() {
+        do {
+            let recordsCoreData = try trackerRecordStore.fetchRecords()
+            completedTrackers = trackerRecordStore.convertToRecords(recordsCoreData)
+        } catch {
+            print("Ошибка загрузки записей: \(error)")
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -226,7 +263,12 @@ final class TrackersViewController: UIViewController {
         // Фильтруем трекеры по расписанию
         visibleCategories = categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { tracker in
-                tracker.schedule.contains(currentWeekDay)
+                // Нерегулярные события (без расписания) показываем всегда
+                if tracker.schedule.isEmpty {
+                    return true
+                }
+                // Для привычек проверяем расписание
+                return tracker.schedule.contains(currentWeekDay)
             }
             
             if filteredTrackers.isEmpty {
@@ -333,21 +375,23 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
 
 extension TrackersViewController: NewHabitViewControllerDelegate {
     func didCreateTracker(_ tracker: Tracker, category: String) {
-        if let index = categories.firstIndex(where: { $0.title == category }) {
-            var updatedTrackers = categories[index].trackers
-            updatedTrackers.append(tracker)
-            let updatedCategory = TrackerCategory(title: category, trackers: updatedTrackers)
+        // Сохраняем в Core Data
+        do {
+            // Создаем или получаем категорию
+            let categoryCoreData = try trackerCategoryStore.createCategory(title: category)
             
-            var newCategories = categories
-            newCategories[index] = updatedCategory
-            categories = newCategories
-        } else {
-            let newCategory = TrackerCategory(title: category, trackers: [tracker])
-            categories.append(newCategory)
+            // Создаем трекер в Core Data
+            _ = try trackerStore.createTracker(from: tracker, category: categoryCoreData)
+            
+            // Сохраняем контекст
+            CoreDataStack.shared.saveContext()
+            
+            // Обновляем локальные данные
+            loadCategories()
+            filterTrackers()
+        } catch {
+            print("Ошибка сохранения трекера: \(error)")
         }
-        
-        // Фильтруем трекеры для текущей даты
-        filterTrackers()
     }
 }
 
@@ -364,20 +408,66 @@ extension TrackersViewController: TrackerCellDelegate {
             return
         }
         
-        // Создаем запись для проверки
-        let recordToCheck = TrackerRecord(id: trackerId, date: currentDate)
-        
-        // Проверяем, выполнен ли трекер в выбранную дату
-        if completedTrackers.contains(recordToCheck) {
-            // Удаляем запись, если трекер уже выполнен (снимаем отметку)
-            completedTrackers.remove(recordToCheck)
-        } else {
-            // Добавляем новую запись о выполнении
-            completedTrackers.insert(recordToCheck)
+        // Проверяем, существует ли уже запись
+        let exists = completedTrackers.contains { record in
+            record.id == trackerId && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
         }
         
-        // Обновляем коллекцию
-        collectionView.reloadData()
+        do {
+            if exists {
+                // Удаляем запись из Core Data
+                try trackerRecordStore.deleteRecord(trackerId: trackerId, date: currentDate)
+                // Удаляем из локального набора
+                if let recordToRemove = completedTrackers.first(where: { record in
+                    record.id == trackerId && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
+                }) {
+                    completedTrackers.remove(recordToRemove)
+                }
+            } else {
+                // Создаем запись в Core Data
+                _ = try trackerRecordStore.createRecord(trackerId: trackerId, date: currentDate)
+                // Добавляем в локальный набор
+                let newRecord = TrackerRecord(id: trackerId, date: currentDate)
+                completedTrackers.insert(newRecord)
+            }
+            
+            // Сохраняем контекст
+            CoreDataStack.shared.saveContext()
+            
+            // Обновляем коллекцию
+            collectionView.reloadData()
+        } catch {
+            print("Ошибка при работе с записью: \(error)")
+        }
+    }
+}
+
+// MARK: - Store Delegates
+
+extension TrackersViewController: TrackerStoreDelegate {
+    func trackerStoreDidUpdate() {
+        DispatchQueue.main.async { [weak self] in
+            self?.loadCategories()
+            self?.filterTrackers()
+        }
+    }
+}
+
+extension TrackersViewController: TrackerCategoryStoreDelegate {
+    func trackerCategoryStoreDidUpdate() {
+        DispatchQueue.main.async { [weak self] in
+            self?.loadCategories()
+            self?.filterTrackers()
+        }
+    }
+}
+
+extension TrackersViewController: TrackerRecordStoreDelegate {
+    func trackerRecordStoreDidUpdate() {
+        DispatchQueue.main.async { [weak self] in
+            self?.loadCompletedTrackers()
+            self?.collectionView.reloadData()
+        }
     }
 }
 
