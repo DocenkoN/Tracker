@@ -1,20 +1,22 @@
-//
-//  AppDelegate.swift
-//  Tracker_New
-//
-//  Created by Nikolay on 06.11.2025.
-//
-
 import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Инициализация Core Data Stack
+        _ = CoreDataStack.shared.persistentContainer
         return true
+    }
+    
+    func applicationWillTerminate(_ application: UIApplication) {
+        // Сохранение контекста при завершении приложения
+        CoreDataStack.shared.saveContext()
+    }
+    
+    func applicationDidEnterBackground(_ application: UIApplication) {
+        // Сохранение контекста при переходе в фон
+        CoreDataStack.shared.saveContext()
     }
 
     // MARK: UISceneSession Lifecycle

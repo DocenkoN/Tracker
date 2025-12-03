@@ -13,11 +13,11 @@ final class NewHabitViewController: UIViewController {
     private var selectedSchedule: [WeekDay] = []
     private var selectedEmojiIndex: Int?
     private var selectedColorIndex: Int?
-    var trackerType: TrackerType = .habit // По умолчанию привычка
+    var trackerType: TrackerType = .habit
     
     enum TrackerType {
-        case habit // Привычка
-        case irregularEvent // Нерегулярное событие
+        case habit
+        case irregularEvent
     }
     
     // MARK: - UI Elements
@@ -157,24 +157,24 @@ final class NewHabitViewController: UIViewController {
     private let emojis = ["😊", "😻", "🌺", "🐶", "😇", "😠", "🥶", "🤔", "🥦", "🏓", "🥇", "🎸", "🙌", "🍔", "🏝️", "😴", "❤️", "😮"]
     
     private let colors: [UIColor] = [
-        UIColor(red: 1.0, green: 0.231, blue: 0.188, alpha: 1.0), // Красный
-        UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0), // Оранжевый
-        UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0), // Синий
-        UIColor(red: 0.556, green: 0.266, blue: 0.678, alpha: 1.0), // Фиолетовый
-        UIColor(red: 0.992, green: 0.227, blue: 0.412, alpha: 1.0), // Розовый
-        UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0), // Зеленый
-        UIColor(red: 0.0, green: 0.690, blue: 0.459, alpha: 1.0), // Мятный
-        UIColor(red: 0.0, green: 0.478, blue: 0.988, alpha: 1.0), // Темно-синий
-        UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0), // Персиковый
-        UIColor(red: 0.8, green: 0.6, blue: 0.9, alpha: 1.0), // Лавандовый
-        UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1.0), // Яркий фиолетовый
-        UIColor(red: 0.4, green: 0.9, blue: 0.5, alpha: 1.0), // Светло-зеленый
-        UIColor(red: 0.4, green: 0.5, blue: 0.9, alpha: 1.0), // Сине-фиолетовый
-        UIColor(red: 1.0, green: 0.388, blue: 0.278, alpha: 1.0), // Коралловый
-        UIColor(red: 0.9, green: 0.4, blue: 0.6, alpha: 1.0), // Розово-красный
-        UIColor(red: 0.5, green: 0.7, blue: 0.9, alpha: 1.0), // Голубой
-        UIColor(red: 0.9, green: 0.6, blue: 0.2, alpha: 1.0), // Коричневый
-        UIColor(red: 0.3, green: 0.8, blue: 0.3, alpha: 1.0) // Светло-зеленый
+        UIColor(red: 1.0, green: 0.231, blue: 0.188, alpha: 1.0),
+        UIColor(red: 1.0, green: 0.584, blue: 0.0, alpha: 1.0),
+        UIColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 1.0),
+        UIColor(red: 0.556, green: 0.266, blue: 0.678, alpha: 1.0),
+        UIColor(red: 0.992, green: 0.227, blue: 0.412, alpha: 1.0),
+        UIColor(red: 0.204, green: 0.780, blue: 0.349, alpha: 1.0),
+        UIColor(red: 0.0, green: 0.690, blue: 0.459, alpha: 1.0),
+        UIColor(red: 0.0, green: 0.478, blue: 0.988, alpha: 1.0),
+        UIColor(red: 1.0, green: 0.8, blue: 0.4, alpha: 1.0),
+        UIColor(red: 0.8, green: 0.6, blue: 0.9, alpha: 1.0),
+        UIColor(red: 0.686, green: 0.322, blue: 0.871, alpha: 1.0),
+        UIColor(red: 0.4, green: 0.9, blue: 0.5, alpha: 1.0),
+        UIColor(red: 0.4, green: 0.5, blue: 0.9, alpha: 1.0),
+        UIColor(red: 1.0, green: 0.388, blue: 0.278, alpha: 1.0),
+        UIColor(red: 0.9, green: 0.4, blue: 0.6, alpha: 1.0),
+        UIColor(red: 0.5, green: 0.7, blue: 0.9, alpha: 1.0),
+        UIColor(red: 0.9, green: 0.6, blue: 0.2, alpha: 1.0),
+        UIColor(red: 0.3, green: 0.8, blue: 0.3, alpha: 1.0) 
     ]
     
     // MARK: - Lifecycle
@@ -198,7 +198,7 @@ final class NewHabitViewController: UIViewController {
         let isValid = isNameValid && isCategorySelected && isScheduleSelected && isEmojiSelected && isColorSelected
         
         createButton.isEnabled = isValid
-        createButton.backgroundColor = isValid ? UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0) : .systemGray
+        createButton.backgroundColor = isValid ? .black : .systemGray
     }
     
     // MARK: - Setup
