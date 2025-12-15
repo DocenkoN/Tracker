@@ -6,8 +6,6 @@ protocol ScheduleViewControllerDelegate: AnyObject {
 
 final class ScheduleViewController: UIViewController {
     
-    // MARK: - Properties
-    
     weak var delegate: ScheduleViewControllerDelegate?
     private var selectedDays: Set<WeekDay> = []
     
@@ -20,8 +18,6 @@ final class ScheduleViewController: UIViewController {
         (.saturday, "Суббота"),
         (.sunday, "Воскресенье")
     ]
-    
-    // MARK: - UI Elements
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -58,14 +54,10 @@ final class ScheduleViewController: UIViewController {
         return button
     }()
     
-    // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
     }
-    
-    // MARK: - Setup
     
     private func setupUI() {
         view.backgroundColor = .white
@@ -75,17 +67,14 @@ final class ScheduleViewController: UIViewController {
         view.addSubview(doneButton)
         
         NSLayoutConstraint.activate([
-            // Title
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            // Table view
             tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             tableView.heightAnchor.constraint(equalToConstant: 525),
             
-            // Done button
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             doneButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
@@ -93,14 +82,10 @@ final class ScheduleViewController: UIViewController {
         ])
     }
     
-    // MARK: - Public Methods
-    
     func setSelectedDays(_ days: [WeekDay]) {
         selectedDays = Set(days)
         tableView.reloadData()
     }
-    
-    // MARK: - Actions
     
     @objc private func doneButtonTapped() {
         let schedule = Array(selectedDays).sorted(by: { $0.rawValue < $1.rawValue })
@@ -119,8 +104,6 @@ final class ScheduleViewController: UIViewController {
     }
 }
 
-// MARK: - UITableViewDataSource
-
 extension ScheduleViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return weekDays.count
@@ -135,7 +118,6 @@ extension ScheduleViewController: UITableViewDataSource {
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
         
-        // Создаем и настраиваем UISwitch
         let switchControl = UISwitch()
         switchControl.isOn = selectedDays.contains(weekDay.day)
         switchControl.onTintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
@@ -147,8 +129,6 @@ extension ScheduleViewController: UITableViewDataSource {
         return cell
     }
 }
-
-// MARK: - UITableViewDelegate
 
 extension ScheduleViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

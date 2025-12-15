@@ -30,7 +30,7 @@ final class TabBarController: UITabBarController {
     
     private func setupAppearance() {
         tabBar.backgroundColor = .white
-        tabBar.tintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0) // Синий цвет
+        tabBar.tintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
         tabBar.unselectedItemTintColor = .gray
         
         let topBorder = CALayer()

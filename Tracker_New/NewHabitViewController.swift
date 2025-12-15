@@ -6,8 +6,6 @@ protocol NewHabitViewControllerDelegate: AnyObject {
 
 final class NewHabitViewController: UIViewController {
     
-    // MARK: - Properties
-    
     weak var delegate: NewHabitViewControllerDelegate?
     private var selectedCategory: String?
     private var selectedSchedule: [WeekDay] = []
@@ -19,8 +17,6 @@ final class NewHabitViewController: UIViewController {
         case habit
         case irregularEvent
     }
-    
-    // MARK: - UI Elements
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -40,7 +36,6 @@ final class NewHabitViewController: UIViewController {
         textField.font = .systemFont(ofSize: 17)
         textField.translatesAutoresizingMaskIntoConstraints = false
         
-        // Добавляем отступы внутри текстового поля
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
         textField.leftView = paddingView
         textField.leftViewMode = .always
@@ -150,8 +145,6 @@ final class NewHabitViewController: UIViewController {
     
     private var tableViewHeightConstraint: NSLayoutConstraint?
     
-    // MARK: - Data
-    
     private let options = ["Категория", "Расписание"]
     
     private let emojis = ["😊", "😻", "🌺", "🐶", "😇", "😠", "🥶", "🤔", "🥦", "🏓", "🥇", "🎸", "🙌", "🍔", "🏝️", "😴", "❤️", "😮"]
@@ -177,16 +170,12 @@ final class NewHabitViewController: UIViewController {
         UIColor(red: 0.3, green: 0.8, blue: 0.3, alpha: 1.0) 
     ]
     
-    // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         nameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         updateTableViewHeight()
     }
-    
-    // MARK: - Validation
     
     private func updateCreateButtonState() {
         let isNameValid = !(nameTextField.text?.isEmpty ?? true)
@@ -200,8 +189,6 @@ final class NewHabitViewController: UIViewController {
         createButton.isEnabled = isValid
         createButton.backgroundColor = isValid ? .black : .systemGray
     }
-    
-    // MARK: - Setup
     
     private func setupUI() {
         view.backgroundColor = .white
@@ -220,30 +207,25 @@ final class NewHabitViewController: UIViewController {
         view.addSubview(createButton)
         
         NSLayoutConstraint.activate([
-            // ScrollView
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16),
             
-            // ContentView
             contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            // Title
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 27),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            // Name text field
             nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
             nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             nameTextField.heightAnchor.constraint(equalToConstant: 75),
             
-            // Options table view
             optionsTableView.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 24),
             optionsTableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             optionsTableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
@@ -253,43 +235,34 @@ final class NewHabitViewController: UIViewController {
         tableViewHeightConstraint?.isActive = true
         
         NSLayoutConstraint.activate([
-            
-            // Emoji label
             emojiLabel.topAnchor.constraint(equalTo: optionsTableView.bottomAnchor, constant: 32),
             emojiLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             
-            // Emoji collection view
             emojiCollectionView.topAnchor.constraint(equalTo: emojiLabel.bottomAnchor, constant: 24),
             emojiCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             emojiCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             emojiCollectionView.heightAnchor.constraint(equalToConstant: 156),
             
-            // Color label
             colorLabel.topAnchor.constraint(equalTo: emojiCollectionView.bottomAnchor, constant: 40),
             colorLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             
-            // Color collection view
             colorCollectionView.topAnchor.constraint(equalTo: colorLabel.bottomAnchor, constant: 24),
             colorCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             colorCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             colorCollectionView.heightAnchor.constraint(equalToConstant: 156),
             colorCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
             
-            // Cancel button
             cancelButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             cancelButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
             cancelButton.trailingAnchor.constraint(equalTo: view.centerXAnchor, constant: -4),
             
-            // Create button
             createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             createButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             createButton.heightAnchor.constraint(equalToConstant: 60),
             createButton.leadingAnchor.constraint(equalTo: view.centerXAnchor, constant: 4)
         ])
     }
-    
-    // MARK: - Actions
     
     @objc private func cancelButtonTapped() {
         dismiss(animated: true)
@@ -303,7 +276,6 @@ final class NewHabitViewController: UIViewController {
             return
         }
         
-        // Для нерегулярного события расписание пустое, для привычки - выбранное
         let schedule = trackerType == .irregularEvent ? [] : selectedSchedule
         
         let newTracker = Tracker(
@@ -321,8 +293,6 @@ final class NewHabitViewController: UIViewController {
     @objc private func textFieldDidChange() {
         updateCreateButtonState()
     }
-    
-    // MARK: - Public Methods
     
     func setCategory(_ category: String) {
         selectedCategory = category
@@ -343,11 +313,8 @@ final class NewHabitViewController: UIViewController {
     }
 }
 
-// MARK: - UITableViewDataSource
-
 extension NewHabitViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // Для нерегулярного события показываем только категорию
         return trackerType == .habit ? options.count : 1
     }
     
@@ -359,7 +326,6 @@ extension NewHabitViewController: UITableViewDataSource {
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
         
-        // Показываем выбранные значения
         if indexPath.row == 0 {
             cell.detailTextLabel?.text = selectedCategory
             cell.detailTextLabel?.textColor = .gray
@@ -386,8 +352,6 @@ extension NewHabitViewController: UITableViewDataSource {
     }
 }
 
-// MARK: - UITableViewDelegate
-
 extension NewHabitViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75
@@ -395,10 +359,11 @@ extension NewHabitViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == 0 {
-            // Категория - пока заглушка
-            setCategory("Важное")
+            let categoryVC = CategorySelectionViewController(selectedCategory: selectedCategory)
+            categoryVC.delegate = self
+            categoryVC.modalPresentationStyle = .pageSheet
+            present(categoryVC, animated: true)
         } else if indexPath.row == 1 && trackerType == .habit {
-            // Открываем экран расписания только для привычек
             let scheduleVC = ScheduleViewController()
             scheduleVC.delegate = self
             scheduleVC.setSelectedDays(selectedSchedule)
@@ -408,15 +373,17 @@ extension NewHabitViewController: UITableViewDelegate {
     }
 }
 
-// MARK: - ScheduleViewControllerDelegate
-
 extension NewHabitViewController: ScheduleViewControllerDelegate {
     func didSelectSchedule(_ schedule: [WeekDay]) {
         setSchedule(schedule)
     }
 }
 
-// MARK: - UICollectionViewDataSource
+extension NewHabitViewController: CategorySelectionViewControllerDelegate {
+    func didSelectCategory(_ category: String) {
+        setCategory(category)
+    }
+}
 
 extension NewHabitViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -446,8 +413,6 @@ extension NewHabitViewController: UICollectionViewDataSource {
     }
 }
 
-// MARK: - UICollectionViewDelegate
-
 extension NewHabitViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == emojiCollectionView {
@@ -462,8 +427,6 @@ extension NewHabitViewController: UICollectionViewDelegate {
     }
 }
 
-// MARK: - UICollectionViewDelegateFlowLayout
-
 extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: 52, height: 52)
@@ -477,8 +440,6 @@ extension NewHabitViewController: UICollectionViewDelegateFlowLayout {
         return 0
     }
 }
-
-// MARK: - EmojiCell
 
 final class EmojiCell: UICollectionViewCell {
     private let emojiLabel: UILabel = {
@@ -509,7 +470,7 @@ final class EmojiCell: UICollectionViewCell {
     func configure(with emoji: String, isSelected: Bool) {
         emojiLabel.text = emoji
         if isSelected {
-            contentView.backgroundColor = UIColor(white: 0.9, alpha: 1.0) // Серый фон
+            contentView.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
             contentView.layer.cornerRadius = 16
             contentView.layer.borderWidth = 0
         } else {
@@ -519,8 +480,6 @@ final class EmojiCell: UICollectionViewCell {
         }
     }
 }
-
-// MARK: - ColorCell
 
 final class ColorCell: UICollectionViewCell {
     private let colorView: UIView = {
@@ -554,11 +513,9 @@ final class ColorCell: UICollectionViewCell {
         colorView.layer.cornerRadius = 8
         
         if isSelected {
-            // Внутренняя тонкая белая линия
             colorView.layer.borderWidth = 3
             colorView.layer.borderColor = UIColor.white.cgColor
             
-            // Внешняя цветная граница с прозрачностью 30%
             contentView.layer.borderWidth = 3
             contentView.layer.borderColor = color.withAlphaComponent(0.3).cgColor
             contentView.layer.cornerRadius = 8

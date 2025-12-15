@@ -2,8 +2,6 @@ import UIKit
 
 final class StatisticsViewController: UIViewController {
     
-    // MARK: - UI Elements
-    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Статистика"
@@ -31,14 +29,10 @@ final class StatisticsViewController: UIViewController {
         return label
     }()
     
-    // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
     }
-    
-    // MARK: - Setup
     
     private func setupUI() {
         view.backgroundColor = .white
