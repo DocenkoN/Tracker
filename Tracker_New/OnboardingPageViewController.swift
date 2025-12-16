@@ -28,7 +28,7 @@ final class OnboardingPageViewController: UIPageViewController {
         button.setTitle("Вот это технологии!", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
@@ -67,7 +67,7 @@ final class OnboardingPageViewController: UIPageViewController {
             
             nextButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             nextButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            nextButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             nextButton.heightAnchor.constraint(equalToConstant: 60)
         ])
     }
@@ -82,10 +82,6 @@ final class OnboardingPageViewController: UIPageViewController {
         } else {
             finishOnboarding()
         }
-    }
-    
-    func skipOnboarding() {
-        finishOnboarding()
     }
     
     private func updatePageControl() {
