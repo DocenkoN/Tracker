@@ -22,12 +22,14 @@ final class CategorySelectionViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "CategoryCell")
+        tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
         tableView.layer.cornerRadius = 16
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.isScrollEnabled = true
+        tableView.allowsSelection = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -44,11 +46,12 @@ final class CategorySelectionViewController: UIViewController {
         return button
     }()
     
-    private var selectedCategoryTitle: String?
-    
-    init(viewModel: CategorySelectionViewModel = CategorySelectionViewModel(), selectedCategory: String? = nil) {
-        self.viewModel = viewModel
-        self.selectedCategoryTitle = selectedCategory
+    init(viewModel: CategorySelectionViewModel? = nil, selectedCategory: String? = nil) {
+        if let viewModel = viewModel {
+            self.viewModel = viewModel
+        } else {
+            self.viewModel = CategorySelectionViewModel(initialSelectedCategory: selectedCategory)
+        }
         super.init(nibName: nil, bundle: nil)
         setupBindings()
     }
@@ -86,7 +89,7 @@ final class CategorySelectionViewController: UIViewController {
     }
     
     private func setupBindings() {
-        viewModel.categoriesBinding = { [weak self] categories in
+        viewModel.cellModelsBinding = { [weak self] _ in
             DispatchQueue.main.async {
                 self?.tableView.reloadData()
             }
@@ -135,23 +138,16 @@ final class CategorySelectionViewController: UIViewController {
 
 extension CategorySelectionViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.categories.count
+        return viewModel.numberOfRows()
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        let category = viewModel.categories[indexPath.row]
-        
-        cell.textLabel?.text = category
-        cell.textLabel?.font = .systemFont(ofSize: 17)
-        cell.backgroundColor = .clear
-        cell.selectionStyle = .none
-        
-        if category == selectedCategoryTitle || category == viewModel.selectedCategory {
-            cell.accessoryType = .checkmark
-        } else {
-            cell.accessoryType = .none
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: CategoryCell.identifier, for: indexPath) as? CategoryCell,
+              let cellModel = viewModel.cellModel(at: indexPath) else {
+            return UITableViewCell()
         }
+        
+        cell.configure(with: cellModel)
         
         return cell
     }
@@ -163,9 +159,12 @@ extension CategorySelectionViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let category = viewModel.categories[indexPath.row]
-        viewModel.selectCategory(category)
-        delegate?.didSelectCategory(category)
+        viewModel.selectCategory(at: indexPath)
+        
+        if let selectedCategory = viewModel.selectedCategory {
+            delegate?.didSelectCategory(selectedCategory)
+        }
+        
         dismiss(animated: true)
     }
 }

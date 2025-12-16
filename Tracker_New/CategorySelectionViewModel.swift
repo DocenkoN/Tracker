@@ -1,15 +1,27 @@
 import Foundation
 
+struct CategoryCellModel {
+    let title: String
+    let isSelected: Bool
+}
+
 final class CategorySelectionViewModel {
     
-    var categories: [String] = [] {
+    private var categoriesData: [String] = [] {
         didSet {
-            categoriesBinding?(categories)
+            updateCellModels()
+        }
+    }
+    
+    private var cellModels: [CategoryCellModel] = [] {
+        didSet {
+            cellModelsBinding?(cellModels)
         }
     }
     
     var selectedCategory: String? {
         didSet {
+            updateCellModels()
             selectedCategoryBinding?(selectedCategory)
         }
     }
@@ -20,27 +32,39 @@ final class CategorySelectionViewModel {
         }
     }
     
-    var categoriesBinding: (([String]) -> Void)?
+    var cellModelsBinding: (([CategoryCellModel]) -> Void)?
     var selectedCategoryBinding: ((String?) -> Void)?
     var errorBinding: ((String?) -> Void)?
     
     private let categoryStore: TrackerCategoryStore
     
-    init(categoryStore: TrackerCategoryStore = TrackerCategoryStore()) {
+    init(categoryStore: TrackerCategoryStore = TrackerCategoryStore(), initialSelectedCategory: String? = nil) {
         self.categoryStore = categoryStore
+        self.selectedCategory = initialSelectedCategory
         loadCategories()
     }
     
     func loadCategories() {
         do {
             let categoriesCoreData = try categoryStore.fetchCategories()
-            categories = categoriesCoreData.compactMap { $0.title }
+            categoriesData = categoriesCoreData.compactMap { $0.title }
         } catch {
             errorMessage = "Ошибка загрузки категорий: \(error.localizedDescription)"
         }
     }
     
-    func selectCategory(_ category: String) {
+    func numberOfRows() -> Int {
+        return cellModels.count
+    }
+    
+    func cellModel(at indexPath: IndexPath) -> CategoryCellModel? {
+        guard indexPath.row < cellModels.count else { return nil }
+        return cellModels[indexPath.row]
+    }
+    
+    func selectCategory(at indexPath: IndexPath) {
+        guard indexPath.row < categoriesData.count else { return }
+        let category = categoriesData[indexPath.row]
         selectedCategory = category
     }
     
@@ -51,6 +75,15 @@ final class CategorySelectionViewModel {
             loadCategories()
         } catch {
             errorMessage = "Ошибка создания категории: \(error.localizedDescription)"
+        }
+    }
+    
+    private func updateCellModels() {
+        cellModels = categoriesData.map { categoryTitle in
+            CategoryCellModel(
+                title: categoryTitle,
+                isSelected: categoryTitle == selectedCategory
+            )
         }
     }
 }
