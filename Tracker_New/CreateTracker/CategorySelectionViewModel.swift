@@ -78,6 +78,53 @@ final class CategorySelectionViewModel {
         }
     }
     
+    func updateCategory(at indexPath: IndexPath, newTitle: String) {
+        guard indexPath.row < categoriesData.count else { return }
+        let oldTitle = categoriesData[indexPath.row]
+        
+        do {
+            if let category = try categoryStore.fetchCategory(by: oldTitle) {
+                try categoryStore.updateCategory(category, title: newTitle)
+                CoreDataStack.shared.saveContext()
+                
+                // Если редактируемая категория была выбрана, обновляем selectedCategory
+                if selectedCategory == oldTitle {
+                    selectedCategory = newTitle
+                }
+                
+                loadCategories()
+            }
+        } catch {
+            errorMessage = "Ошибка обновления категории: \(error.localizedDescription)"
+        }
+    }
+    
+    func deleteCategory(at indexPath: IndexPath) {
+        guard indexPath.row < categoriesData.count else { return }
+        let categoryTitle = categoriesData[indexPath.row]
+        
+        do {
+            if let category = try categoryStore.fetchCategory(by: categoryTitle) {
+                try categoryStore.deleteCategory(category)
+                CoreDataStack.shared.saveContext()
+                
+                // Если удаляемая категория была выбрана, сбрасываем выбор
+                if selectedCategory == categoryTitle {
+                    selectedCategory = nil
+                }
+                
+                loadCategories()
+            }
+        } catch {
+            errorMessage = "Ошибка удаления категории: \(error.localizedDescription)"
+        }
+    }
+    
+    func getCategoryTitle(at indexPath: IndexPath) -> String? {
+        guard indexPath.row < categoriesData.count else { return nil }
+        return categoriesData[indexPath.row]
+    }
+    
     private func updateCellModels() {
         cellModels = categoriesData.map { categoryTitle in
             CategoryCellModel(

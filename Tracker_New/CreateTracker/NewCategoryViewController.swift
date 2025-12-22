@@ -2,11 +2,14 @@ import UIKit
 
 protocol NewCategoryViewControllerDelegate: AnyObject {
     func didCreateCategory(_ categoryTitle: String)
+    func didUpdateCategory(_ categoryTitle: String, at indexPath: IndexPath)
 }
 
 final class NewCategoryViewController: UIViewController {
     
     weak var delegate: NewCategoryViewControllerDelegate?
+    var editingIndexPath: IndexPath?
+    var initialCategoryTitle: String?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -25,8 +28,11 @@ final class NewCategoryViewController: UIViewController {
         textField.layer.cornerRadius = 16
         textField.font = .systemFont(ofSize: 17)
         textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.autocorrectionType = .no
+        textField.returnKeyType = .done
+        textField.clearButtonMode = .whileEditing
         
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 75))
         textField.leftView = paddingView
         textField.leftViewMode = .always
         
@@ -49,8 +55,36 @@ final class NewCategoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        categoryTextField.becomeFirstResponder()
+        
+        // Если редактируем - обновляем заголовок и заполняем поле
+        if editingIndexPath != nil {
+            titleLabel.text = "Редактирование категории"
+            if let initialTitle = initialCategoryTitle {
+                categoryTextField.text = initialTitle
+                // Вызываем textFieldDidChange для активации кнопки
+                DispatchQueue.main.async { [weak self] in
+                    self?.textFieldDidChange()
+                }
+            }
+        }
+        
         categoryTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        categoryTextField.delegate = self
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // Используем небольшую задержку для корректной работы с физической клавиатурой
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            guard let self = self else { return }
+            if self.categoryTextField.canBecomeFirstResponder {
+                self.categoryTextField.becomeFirstResponder()
+            }
+        }
+    }
+    
+    override var canBecomeFirstResponder: Bool {
+        return true
     }
     
     private func setupUI() {
@@ -95,8 +129,22 @@ final class NewCategoryViewController: UIViewController {
               !text.isEmpty else {
             return
         }
-        delegate?.didCreateCategory(text)
+        
+        if let indexPath = editingIndexPath {
+            delegate?.didUpdateCategory(text, at: indexPath)
+        } else {
+            delegate?.didCreateCategory(text)
+        }
+        
         dismiss(animated: true)
+    }
+}
+
+extension NewCategoryViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        doneButtonTapped()
+        return true
     }
 }
 

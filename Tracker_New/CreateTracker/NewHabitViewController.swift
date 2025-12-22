@@ -49,8 +49,11 @@ final class NewHabitViewController: UIViewController {
         tableView.dataSource = self
         tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
         tableView.layer.cornerRadius = 16
+        tableView.clipsToBounds = true
         tableView.isScrollEnabled = false
-        tableView.separatorStyle = .none
+        tableView.separatorStyle = .singleLine
+        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -326,6 +329,13 @@ extension NewHabitViewController: UITableViewDataSource {
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
         
+        // Скрываем разделитель для последней ячейки
+        if indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1 {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        } else {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        }
+        
         if indexPath.row == 0 {
             cell.detailTextLabel?.text = selectedCategory
             cell.detailTextLabel?.textColor = .gray
@@ -355,6 +365,16 @@ extension NewHabitViewController: UITableViewDataSource {
 extension NewHabitViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75
+    }
+    
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        let footerView = UIView()
+        footerView.backgroundColor = .clear
+        return footerView
+    }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 0
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

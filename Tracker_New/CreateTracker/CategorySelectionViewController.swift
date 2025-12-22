@@ -9,6 +9,7 @@ final class CategorySelectionViewController: UIViewController {
     weak var delegate: CategorySelectionViewControllerDelegate?
     
     private let viewModel: CategorySelectionViewModel
+    private var tableViewHeightConstraint: NSLayoutConstraint?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -25,8 +26,14 @@ final class CategorySelectionViewController: UIViewController {
         tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = .white
-        tableView.separatorStyle = .none
+        tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        tableView.layer.cornerRadius = 16
+        tableView.clipsToBounds = true
+        tableView.separatorStyle = .singleLine
+        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.rowHeight = 75
+        tableView.estimatedRowHeight = 75
         tableView.isScrollEnabled = true
         tableView.allowsSelection = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -120,8 +127,10 @@ final class CategorySelectionViewController: UIViewController {
             addCategoryButton.heightAnchor.constraint(equalToConstant: 60)
         ])
         
-        // Устанавливаем constraint для таблицы
-        tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -16).isActive = true
+        // Устанавливаем динамическую высоту для таблицы
+        tableViewHeightConstraint = tableView.heightAnchor.constraint(equalToConstant: 0)
+        tableViewHeightConstraint?.isActive = true
+        updateTableViewHeight()
     }
     
     private func setupBindings() {
@@ -129,6 +138,10 @@ final class CategorySelectionViewController: UIViewController {
             DispatchQueue.main.async {
                 self?.updateEmptyState()
                 self?.tableView.reloadData()
+                // Небольшая задержка для корректного обновления layout после reloadData
+                DispatchQueue.main.async {
+                    self?.updateTableViewHeight()
+                }
             }
         }
         
@@ -154,6 +167,7 @@ final class CategorySelectionViewController: UIViewController {
             self?.updateEmptyState()
             self?.updateAddCategoryButton()
             self?.tableView.reloadData()
+            self?.updateTableViewHeight()
         }
     }
     
@@ -182,10 +196,36 @@ final class CategorySelectionViewController: UIViewController {
         }
     }
     
+    private func updateTableViewHeight() {
+        let numberOfRows = viewModel.numberOfRows()
+        guard numberOfRows > 0 else {
+            tableViewHeightConstraint?.constant = 0
+            view.setNeedsLayout()
+            return
+        }
+        
+        let rowHeight: CGFloat = 75
+        let totalHeight = CGFloat(numberOfRows) * rowHeight
+        
+        // Ограничиваем максимальную высоту для скролла
+        let maxHeight: CGFloat = 300
+        let finalHeight = min(totalHeight, maxHeight)
+        
+        tableViewHeightConstraint?.constant = finalHeight
+        tableView.isScrollEnabled = totalHeight > maxHeight
+        
+        // Обновляем layout асинхронно для избежания конфликтов
+        DispatchQueue.main.async { [weak self] in
+            self?.view.setNeedsLayout()
+            self?.view.layoutIfNeeded()
+        }
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateEmptyState()
         updateAddCategoryButton()
+        updateTableViewHeight()
     }
     
     @objc private func addCategoryButtonTapped() {
@@ -253,11 +293,72 @@ extension CategorySelectionViewController: UITableViewDelegate {
         tableView.reloadData()
         updateAddCategoryButton()
     }
+    
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            let editAction = UIAction(
+                title: "Редактировать",
+                image: UIImage(systemName: "pencil")
+            ) { _ in
+                self?.editCategory(at: indexPath)
+            }
+            
+            let deleteAction = UIAction(
+                title: "Удалить",
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { _ in
+                self?.showDeleteConfirmation(for: indexPath)
+            }
+            
+            return UIMenu(title: "", children: [editAction, deleteAction])
+        }
+    }
+    
+    private func editCategory(at indexPath: IndexPath) {
+        guard let categoryTitle = viewModel.getCategoryTitle(at: indexPath) else { return }
+        
+        let editCategoryVC = NewCategoryViewController()
+        editCategoryVC.initialCategoryTitle = categoryTitle
+        editCategoryVC.editingIndexPath = indexPath
+        editCategoryVC.delegate = self
+        editCategoryVC.modalPresentationStyle = .pageSheet
+        present(editCategoryVC, animated: true)
+    }
+    
+    private func showDeleteConfirmation(for indexPath: IndexPath) {
+        let alert = UIAlertController(
+            title: "Эта категория точно не нужна?",
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+        
+        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+            self?.viewModel.deleteCategory(at: indexPath)
+        }
+        
+        let cancelAction = UIAlertAction(title: "Отменить", style: .cancel)
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        
+        // Для iPad нужно указать sourceView
+        if let cell = tableView.cellForRow(at: indexPath) {
+            alert.popoverPresentationController?.sourceView = cell
+            alert.popoverPresentationController?.sourceRect = cell.bounds
+        }
+        
+        present(alert, animated: true)
+    }
 }
 
 extension CategorySelectionViewController: NewCategoryViewControllerDelegate {
     func didCreateCategory(_ categoryTitle: String) {
         viewModel.createCategory(title: categoryTitle)
+    }
+    
+    func didUpdateCategory(_ categoryTitle: String, at indexPath: IndexPath) {
+        viewModel.updateCategory(at: indexPath, newTitle: categoryTitle)
     }
 }
 
