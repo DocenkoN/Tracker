@@ -50,7 +50,7 @@ final class NewHabitViewController: UIViewController {
         tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
         tableView.layer.cornerRadius = 16
         tableView.isScrollEnabled = false
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorStyle = .none
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
