@@ -83,11 +83,11 @@ final class CategorySelectionViewModel {
         let oldTitle = categoriesData[indexPath.row]
         
         do {
-            if let category = try categoryStore.fetchCategory(by: oldTitle) {
-                try categoryStore.updateCategory(category, title: newTitle)
+            if let categoryCoreData = try categoryStore.fetchCategory(by: oldTitle) {
+                try categoryStore.updateCategory(categoryCoreData, title: newTitle)
                 CoreDataStack.shared.saveContext()
                 
-                // Если редактируемая категория была выбрана, обновляем selectedCategory
+                // Обновляем selectedCategory если редактировали выбранную категорию
                 if selectedCategory == oldTitle {
                     selectedCategory = newTitle
                 }
@@ -104,11 +104,11 @@ final class CategorySelectionViewModel {
         let categoryTitle = categoriesData[indexPath.row]
         
         do {
-            if let category = try categoryStore.fetchCategory(by: categoryTitle) {
-                try categoryStore.deleteCategory(category)
+            if let categoryCoreData = try categoryStore.fetchCategory(by: categoryTitle) {
+                try categoryStore.deleteCategory(categoryCoreData)
                 CoreDataStack.shared.saveContext()
                 
-                // Если удаляемая категория была выбрана, сбрасываем выбор
+                // Очищаем selectedCategory если удалили выбранную категорию
                 if selectedCategory == categoryTitle {
                     selectedCategory = nil
                 }

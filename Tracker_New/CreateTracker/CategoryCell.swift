@@ -62,6 +62,12 @@ final class CategoryCell: UITableViewCell {
         ])
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = nil
+        checkmarkImageView.isHidden = true
+    }
+    
     func configure(with model: CategoryCellModel) {
         titleLabel.text = model.title
         checkmarkImageView.isHidden = !model.isSelected

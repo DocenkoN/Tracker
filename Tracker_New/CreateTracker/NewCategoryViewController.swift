@@ -31,6 +31,7 @@ final class NewCategoryViewController: UIViewController {
         textField.autocorrectionType = .no
         textField.returnKeyType = .done
         textField.clearButtonMode = .whileEditing
+        textField.delegate = self
         
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 75))
         textField.leftView = paddingView
@@ -61,10 +62,7 @@ final class NewCategoryViewController: UIViewController {
             titleLabel.text = "Редактирование категории"
             if let initialTitle = initialCategoryTitle {
                 categoryTextField.text = initialTitle
-                // Вызываем textFieldDidChange для активации кнопки
-                DispatchQueue.main.async { [weak self] in
-                    self?.textFieldDidChange()
-                }
+                textFieldDidChange() // Обновляем состояние кнопки "Готово"
             }
         }
         
@@ -142,8 +140,9 @@ final class NewCategoryViewController: UIViewController {
 
 extension NewCategoryViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        doneButtonTapped()
+        if doneButton.isEnabled {
+            doneButtonTapped()
+        }
         return true
     }
 }
