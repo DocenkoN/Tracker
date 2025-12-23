@@ -8,9 +8,12 @@ final class CategoryCell: UITableViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 17)
+        label.font = .systemFont(ofSize: 17, weight: .regular)
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .left
+        label.baselineAdjustment = .alignBaselines
+        label.numberOfLines = 1
         return label
     }()
     
@@ -44,28 +47,40 @@ final class CategoryCell: UITableViewCell {
         isSetup = true
         
         backgroundColor = .clear
-        selectionStyle = .none
         contentView.backgroundColor = .clear
+        selectionStyle = .none
         
-        contentView.addSubview(titleLabel)
-        contentView.addSubview(checkmarkImageView)
+        // Устанавливаем нулевые margins для точного контроля
+        contentView.layoutMargins = UIEdgeInsets.zero
+        contentView.directionalLayoutMargins = NSDirectionalEdgeInsets.zero
+        contentView.preservesSuperviewLayoutMargins = false
+        
+        // Используем StackView для более надежного выравнивания
+        let stackView = UIStackView(arrangedSubviews: [titleLabel, checkmarkImageView])
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        stackView.distribution = .fill
+        stackView.spacing = 8
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        contentView.addSubview(stackView)
         
         NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: checkmarkImageView.leadingAnchor, constant: -8),
+            stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            stackView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            stackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            stackView.heightAnchor.constraint(equalToConstant: 75),
             
-            checkmarkImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            checkmarkImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
             checkmarkImageView.widthAnchor.constraint(equalToConstant: 24),
             checkmarkImageView.heightAnchor.constraint(equalToConstant: 24)
         ])
     }
     
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        titleLabel.text = nil
-        checkmarkImageView.isHidden = true
+    override func systemLayoutSizeFitting(_ targetSize: CGSize, withHorizontalFittingPriority horizontalFittingPriority: UILayoutPriority, verticalFittingPriority: UILayoutPriority) -> CGSize {
+        var size = super.systemLayoutSizeFitting(targetSize, withHorizontalFittingPriority: horizontalFittingPriority, verticalFittingPriority: verticalFittingPriority)
+        size.height = 75
+        return size
     }
     
     func configure(with model: CategoryCellModel) {

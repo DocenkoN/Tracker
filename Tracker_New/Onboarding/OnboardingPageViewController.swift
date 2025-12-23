@@ -73,6 +73,14 @@ final class OnboardingPageViewController: UIPageViewController {
     }
     
     @objc private func nextButtonTapped() {
+        // Получаем текущий индекс из реального viewController
+        guard let currentViewController = viewControllers?.first,
+              let currentIndex = pages.firstIndex(of: currentViewController) else {
+            return
+        }
+        
+        currentPageIndex = currentIndex
+        
         if currentPageIndex < pages.count - 1 {
             currentPageIndex += 1
             let nextPage = pages[currentPageIndex]
