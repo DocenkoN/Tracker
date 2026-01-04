@@ -5,6 +5,7 @@ final class TrackersViewController: UIViewController {
     var categories: [TrackerCategory] = []
     var completedTrackers: Set<TrackerRecord> = []
     private var visibleCategories: [TrackerCategory] = []
+    private var searchText: String = ""
     
     private let trackerStore = TrackerStore()
     private let trackerCategoryStore = TrackerCategoryStore()
@@ -59,12 +60,13 @@ final class TrackersViewController: UIViewController {
         return label
     }()
     
-    private lazy var searchBar: UISearchBar = {
-        let searchBar = UISearchBar()
-        searchBar.placeholder = "Поиск"
-        searchBar.searchBarStyle = .minimal
-        searchBar.translatesAutoresizingMaskIntoConstraints = false
-        return searchBar
+    private lazy var searchTextField: UISearchTextField = {
+        let textField = UISearchTextField()
+        textField.placeholder = "Поиск"
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.delegate = self
+        textField.addTarget(self, action: #selector(searchTextChanged), for: .editingChanged)
+        return textField
     }()
     
     private lazy var collectionView: UICollectionView = {
@@ -156,7 +158,7 @@ final class TrackersViewController: UIViewController {
         view.addSubview(datePicker)
         view.addSubview(dateLabel)
         view.addSubview(titleLabel)
-        view.addSubview(searchBar)
+        view.addSubview(searchTextField)
         view.addSubview(collectionView)
         view.addSubview(emptyStateImageView)
         view.addSubview(emptyStateLabel)
@@ -180,12 +182,12 @@ final class TrackersViewController: UIViewController {
             titleLabel.topAnchor.constraint(equalTo: addButton.bottomAnchor, constant: 1),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             
-            searchBar.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 7),
-            searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-            searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
-            searchBar.heightAnchor.constraint(equalToConstant: 36),
+            searchTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 7),
+            searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+            searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+            searchTextField.heightAnchor.constraint(equalToConstant: 36),
             
-            collectionView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 10),
+            collectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 10),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
@@ -239,10 +241,23 @@ final class TrackersViewController: UIViewController {
         
         visibleCategories = categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { tracker in
+                // Фильтрация по дню недели
+                let matchesSchedule: Bool
                 if tracker.schedule.isEmpty {
-                    return true
+                    matchesSchedule = true
+                } else {
+                    matchesSchedule = tracker.schedule.contains(currentWeekDay)
                 }
-                return tracker.schedule.contains(currentWeekDay)
+                
+                // Фильтрация по тексту поиска
+                let matchesSearch: Bool
+                if searchText.isEmpty {
+                    matchesSearch = true
+                } else {
+                    matchesSearch = tracker.name.lowercased().contains(searchText.lowercased())
+                }
+                
+                return matchesSchedule && matchesSearch
             }
             
             if filteredTrackers.isEmpty {
@@ -257,6 +272,11 @@ final class TrackersViewController: UIViewController {
         let hasVisibleTrackers = !visibleCategories.isEmpty
         emptyStateImageView.isHidden = hasVisibleTrackers
         emptyStateLabel.isHidden = hasVisibleTrackers
+    }
+    
+    @objc private func searchTextChanged() {
+        searchText = searchTextField.text ?? ""
+        filterTrackers()
     }
 }
 
@@ -413,6 +433,13 @@ extension TrackersViewController: TrackerRecordStoreDelegate {
             self?.loadCompletedTrackers()
             self?.collectionView.reloadData()
         }
+    }
+}
+
+extension TrackersViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
 
