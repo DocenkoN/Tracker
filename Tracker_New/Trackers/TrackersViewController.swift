@@ -2,19 +2,13 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    // MARK: - Properties
-    
     var categories: [TrackerCategory] = []
     var completedTrackers: Set<TrackerRecord> = []
     private var visibleCategories: [TrackerCategory] = []
     
-    // MARK: - Core Data Stores
-    
     private let trackerStore = TrackerStore()
     private let trackerCategoryStore = TrackerCategoryStore()
     private let trackerRecordStore = TrackerRecordStore()
-    
-    // MARK: - UI Elements
     
     private lazy var addButton: UIButton = {
         let button = UIButton(type: .system)
@@ -103,8 +97,6 @@ final class TrackersViewController: UIViewController {
         return label
     }()
     
-    // MARK: - Lifecycle
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -157,14 +149,12 @@ final class TrackersViewController: UIViewController {
         }
     }
     
-    // MARK: - Setup
-    
     private func setupUI() {
         view.backgroundColor = .white
         
         view.addSubview(addButton)
         view.addSubview(datePicker)
-        view.addSubview(dateLabel) // Label сверху
+        view.addSubview(dateLabel)
         view.addSubview(titleLabel)
         view.addSubview(searchBar)
         view.addSubview(collectionView)
@@ -172,53 +162,43 @@ final class TrackersViewController: UIViewController {
         view.addSubview(emptyStateLabel)
         
         NSLayoutConstraint.activate([
-            // Add button (42x42 согласно Figma)
             addButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
             addButton.widthAnchor.constraint(equalToConstant: 42),
             addButton.heightAnchor.constraint(equalToConstant: 42),
             
-            // Date label
             dateLabel.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
             dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             dateLabel.widthAnchor.constraint(equalToConstant: 77),
             dateLabel.heightAnchor.constraint(equalToConstant: 34),
             
-            // Date picker (поверх label, невидимый но кликабельный)
             datePicker.centerYAnchor.constraint(equalTo: dateLabel.centerYAnchor),
             datePicker.centerXAnchor.constraint(equalTo: dateLabel.centerXAnchor),
             datePicker.widthAnchor.constraint(equalTo: dateLabel.widthAnchor),
             datePicker.heightAnchor.constraint(equalTo: dateLabel.heightAnchor),
             
-            // Title (SF Pro Bold 34, line height 40.8)
             titleLabel.topAnchor.constraint(equalTo: addButton.bottomAnchor, constant: 1),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             
-            // Search bar
             searchBar.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 7),
             searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
             searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
             searchBar.heightAnchor.constraint(equalToConstant: 36),
             
-            // Collection view
             collectionView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 10),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             
-            // Empty state image (80x80 согласно Figma)
             emptyStateImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             emptyStateImageView.widthAnchor.constraint(equalToConstant: 80),
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
             
-            // Empty state label (SF Pro Medium 12, line height 18)
             emptyStateLabel.topAnchor.constraint(equalTo: emptyStateImageView.bottomAnchor, constant: 8),
             emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
     }
-    
-    // MARK: - Actions
     
     @objc private func addButtonTapped() {
         let newHabitVC = NewHabitViewController()
@@ -230,12 +210,10 @@ final class TrackersViewController: UIViewController {
     @objc private func dateChanged() {
         currentDate = datePicker.date
         
-        // Обновляем label
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd.MM.yy"
         dateLabel.text = dateFormatter.string(from: currentDate)
         
-        // Скрываем системный текст picker после изменения
         DispatchQueue.main.async { [weak self] in
             self?.hideDatePickerText()
         }
@@ -247,7 +225,6 @@ final class TrackersViewController: UIViewController {
         let calendar = Calendar.current
         let weekDay = calendar.component(.weekday, from: currentDate)
         
-        // Конвертируем в наш WeekDay enum (1 = Monday, 7 = Sunday)
         let currentWeekDay: WeekDay
         switch weekDay {
         case 1: currentWeekDay = .sunday
@@ -260,14 +237,11 @@ final class TrackersViewController: UIViewController {
         default: currentWeekDay = .monday
         }
         
-        // Фильтруем трекеры по расписанию
         visibleCategories = categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { tracker in
-                // Нерегулярные события (без расписания) показываем всегда
                 if tracker.schedule.isEmpty {
                     return true
                 }
-                // Для привычек проверяем расписание
                 return tracker.schedule.contains(currentWeekDay)
             }
             
@@ -280,14 +254,11 @@ final class TrackersViewController: UIViewController {
         
         collectionView.reloadData()
         
-        // Обновляем видимость empty state
         let hasVisibleTrackers = !visibleCategories.isEmpty
         emptyStateImageView.isHidden = hasVisibleTrackers
         emptyStateLabel.isHidden = hasVisibleTrackers
     }
 }
-
-// MARK: - UICollectionViewDataSource
 
 extension TrackersViewController: UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
@@ -305,15 +276,12 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
         
-        // Подсчет количества выполненных дней
         let completedDays = completedTrackers.filter { $0.id == tracker.id }.count
         
-        // Проверка, выполнен ли трекер в выбранную дату
         let isCompletedToday = completedTrackers.contains { record in
             record.id == tracker.id && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
         }
         
-        // Проверка, является ли выбранная дата будущей
         let today = Calendar.current.startOfDay(for: Date())
         let selectedDate = Calendar.current.startOfDay(for: currentDate)
         let isFutureDate = selectedDate > today
@@ -329,7 +297,6 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         header.subviews.forEach { $0.removeFromSuperview() }
         
-        // Добавляем заголовок категории
         let label = UILabel()
         label.text = visibleCategories[indexPath.section].title
         label.font = .systemFont(ofSize: 19, weight: .bold)
@@ -346,8 +313,6 @@ extension TrackersViewController: UICollectionViewDataSource {
         return header
     }
 }
-
-// MARK: - UICollectionViewDelegateFlowLayout
 
 extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -371,22 +336,15 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
-// MARK: - NewHabitViewControllerDelegate
-
 extension TrackersViewController: NewHabitViewControllerDelegate {
     func didCreateTracker(_ tracker: Tracker, category: String) {
-        // Сохраняем в Core Data
         do {
-            // Создаем или получаем категорию
             let categoryCoreData = try trackerCategoryStore.createCategory(title: category)
             
-            // Создаем трекер в Core Data
             _ = try trackerStore.createTracker(from: tracker, category: categoryCoreData)
             
-            // Сохраняем контекст
             CoreDataStack.shared.saveContext()
             
-            // Обновляем локальные данные
             loadCategories()
             filterTrackers()
         } catch {
@@ -395,54 +353,41 @@ extension TrackersViewController: NewHabitViewControllerDelegate {
     }
 }
 
-// MARK: - TrackerCellDelegate
-
 extension TrackersViewController: TrackerCellDelegate {
     func didTapPlusButton(for trackerId: UUID) {
-        // Проверяем, что дата не в будущем
         let today = Calendar.current.startOfDay(for: Date())
         let selectedDate = Calendar.current.startOfDay(for: currentDate)
         
         guard selectedDate <= today else {
-            // Нельзя отметить трекер для будущей даты
             return
         }
         
-        // Проверяем, существует ли уже запись
         let exists = completedTrackers.contains { record in
             record.id == trackerId && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
         }
         
         do {
             if exists {
-                // Удаляем запись из Core Data
                 try trackerRecordStore.deleteRecord(trackerId: trackerId, date: currentDate)
-                // Удаляем из локального набора
                 if let recordToRemove = completedTrackers.first(where: { record in
                     record.id == trackerId && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
                 }) {
                     completedTrackers.remove(recordToRemove)
                 }
             } else {
-                // Создаем запись в Core Data
                 _ = try trackerRecordStore.createRecord(trackerId: trackerId, date: currentDate)
-                // Добавляем в локальный набор
                 let newRecord = TrackerRecord(id: trackerId, date: currentDate)
                 completedTrackers.insert(newRecord)
             }
             
-            // Сохраняем контекст
             CoreDataStack.shared.saveContext()
             
-            // Обновляем коллекцию
             collectionView.reloadData()
         } catch {
             print("Ошибка при работе с записью: \(error)")
         }
     }
 }
-
-// MARK: - Store Delegates
 
 extension TrackersViewController: TrackerStoreDelegate {
     func trackerStoreDidUpdate() {

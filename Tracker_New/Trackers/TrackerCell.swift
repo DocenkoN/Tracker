@@ -2,13 +2,9 @@ import UIKit
 
 final class TrackerCell: UICollectionViewCell {
     
-    // MARK: - Properties
-    
     static let identifier = "TrackerCell"
     weak var delegate: TrackerCellDelegate?
     private var trackerId: UUID?
-    
-    // MARK: - UI Elements
     
     private let colorView: UIView = {
         let view = UIView()
@@ -55,8 +51,6 @@ final class TrackerCell: UICollectionViewCell {
         return button
     }()
     
-    // MARK: - Init
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
@@ -65,8 +59,6 @@ final class TrackerCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    // MARK: - Setup
     
     private func setupViews() {
         contentView.addSubview(colorView)
@@ -77,36 +69,29 @@ final class TrackerCell: UICollectionViewCell {
         colorView.addSubview(nameLabel)
         
         NSLayoutConstraint.activate([
-            // Color view (верхняя часть)
             colorView.topAnchor.constraint(equalTo: contentView.topAnchor),
             colorView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             colorView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             colorView.heightAnchor.constraint(equalToConstant: 90),
             
-            // Emoji
             emojiLabel.topAnchor.constraint(equalTo: colorView.topAnchor, constant: 12),
             emojiLabel.leadingAnchor.constraint(equalTo: colorView.leadingAnchor, constant: 12),
             emojiLabel.widthAnchor.constraint(equalToConstant: 24),
             emojiLabel.heightAnchor.constraint(equalToConstant: 24),
             
-            // Name
             nameLabel.leadingAnchor.constraint(equalTo: colorView.leadingAnchor, constant: 12),
             nameLabel.trailingAnchor.constraint(equalTo: colorView.trailingAnchor, constant: -12),
             nameLabel.bottomAnchor.constraint(equalTo: colorView.bottomAnchor, constant: -12),
             
-            // Days label
             daysLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
             daysLabel.topAnchor.constraint(equalTo: colorView.bottomAnchor, constant: 16),
             
-            // Plus button
             plusButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
             plusButton.centerYAnchor.constraint(equalTo: daysLabel.centerYAnchor),
             plusButton.widthAnchor.constraint(equalToConstant: 34),
             plusButton.heightAnchor.constraint(equalToConstant: 34)
         ])
     }
-    
-    // MARK: - Configuration
     
     func configure(with tracker: Tracker, days: Int, isCompleted: Bool, isFutureDate: Bool = false) {
         trackerId = tracker.id
@@ -115,7 +100,6 @@ final class TrackerCell: UICollectionViewCell {
         nameLabel.text = tracker.name
         plusButton.backgroundColor = tracker.color
         
-        // Форматирование количества дней
         let daysText: String
         if days % 10 == 1 && days % 100 != 11 {
             daysText = "\(days) день"
@@ -126,10 +110,8 @@ final class TrackerCell: UICollectionViewCell {
         }
         daysLabel.text = daysText
         
-        // Отключаем кнопку для будущих дат
         plusButton.isEnabled = !isFutureDate
         
-        // Изменение вида кнопки в зависимости от выполнения
         if isCompleted {
             plusButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
             plusButton.alpha = 0.3
@@ -139,15 +121,11 @@ final class TrackerCell: UICollectionViewCell {
         }
     }
     
-    // MARK: - Actions
-    
     @objc private func plusButtonTapped() {
         guard let trackerId = trackerId else { return }
         delegate?.didTapPlusButton(for: trackerId)
     }
 }
-
-// MARK: - TrackerCellDelegate
 
 protocol TrackerCellDelegate: AnyObject {
     func didTapPlusButton(for trackerId: UUID)
