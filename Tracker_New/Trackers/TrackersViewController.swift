@@ -6,6 +6,7 @@ final class TrackersViewController: UIViewController {
     var completedTrackers: Set<TrackerRecord> = []
     private var visibleCategories: [TrackerCategory] = []
     private var searchText: String = ""
+    private var currentFilter: TrackerFilter?
     
     private let trackerStore = TrackerStore()
     private let trackerCategoryStore = TrackerCategoryStore()
@@ -99,11 +100,50 @@ final class TrackersViewController: UIViewController {
         return label
     }()
     
+    private lazy var nothingFoundImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "Image_star")
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
+    }()
+    
+    private lazy var nothingFoundLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Ничего не найдено"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .black
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+    
+    private lazy var filtersButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Фильтры", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor(red: 0.2, green: 0.4, blue: 0.9, alpha: 1.0)
+        button.layer.cornerRadius = 16
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(filtersButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupStores()
         loadData()
+        setupCollectionViewInsets()
+    }
+    
+    private func setupCollectionViewInsets() {
+        // Добавляем contentInset снизу, чтобы ячейки могли прокручиваться выше кнопки "Фильтры"
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 66, right: 0)
+        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 66, right: 0)
     }
     
     private func setupStores() {
@@ -162,6 +202,9 @@ final class TrackersViewController: UIViewController {
         view.addSubview(collectionView)
         view.addSubview(emptyStateImageView)
         view.addSubview(emptyStateLabel)
+        view.addSubview(nothingFoundImageView)
+        view.addSubview(nothingFoundLabel)
+        view.addSubview(filtersButton)
         
         NSLayoutConstraint.activate([
             addButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
@@ -190,7 +233,12 @@ final class TrackersViewController: UIViewController {
             collectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 10),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: filtersButton.topAnchor, constant: -16),
+            
+            filtersButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 114),
+            filtersButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -114),
+            filtersButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            filtersButton.heightAnchor.constraint(equalToConstant: 50),
             
             emptyStateImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -198,7 +246,15 @@ final class TrackersViewController: UIViewController {
             emptyStateImageView.heightAnchor.constraint(equalToConstant: 80),
             
             emptyStateLabel.topAnchor.constraint(equalTo: emptyStateImageView.bottomAnchor, constant: 8),
-            emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            
+            nothingFoundImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            nothingFoundImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            nothingFoundImageView.widthAnchor.constraint(equalToConstant: 80),
+            nothingFoundImageView.heightAnchor.constraint(equalToConstant: 80),
+            
+            nothingFoundLabel.topAnchor.constraint(equalTo: nothingFoundImageView.bottomAnchor, constant: 8),
+            nothingFoundLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
     }
     
@@ -207,6 +263,23 @@ final class TrackersViewController: UIViewController {
         newHabitVC.delegate = self
         newHabitVC.modalPresentationStyle = .pageSheet
         present(newHabitVC, animated: true)
+    }
+    
+    @objc private func filtersButtonTapped() {
+        let filtersVC = FiltersViewController()
+        filtersVC.currentFilter = currentFilter
+        filtersVC.delegate = self
+        filtersVC.modalPresentationStyle = .pageSheet
+        
+        if #available(iOS 15.0, *) {
+            if let sheet = filtersVC.sheetPresentationController {
+                sheet.detents = [.large()]
+                sheet.preferredCornerRadius = 16
+                sheet.prefersGrabberVisible = false
+            }
+        }
+        
+        present(filtersVC, animated: true)
     }
     
     @objc private func dateChanged() {
@@ -239,7 +312,8 @@ final class TrackersViewController: UIViewController {
         default: currentWeekDay = .monday
         }
         
-        visibleCategories = categories.compactMap { category in
+        // Сначала фильтруем по дню недели и поиску
+        var filteredByScheduleAndSearch: [TrackerCategory] = categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { tracker in
                 // Фильтрация по дню недели
                 let matchesSchedule: Bool
@@ -267,11 +341,87 @@ final class TrackersViewController: UIViewController {
             return TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
         
+        // Применяем дополнительный фильтр, если он выбран
+        if let filter = currentFilter {
+            let today = Calendar.current.startOfDay(for: Date())
+            let selectedDate = Calendar.current.startOfDay(for: currentDate)
+            let isToday = Calendar.current.isDate(selectedDate, inSameDayAs: today)
+            
+            filteredByScheduleAndSearch = filteredByScheduleAndSearch.compactMap { category in
+                let filteredTrackers = category.trackers.filter { tracker in
+                    switch filter {
+                    case .all:
+                        return true
+                    case .today:
+                        // "Трекеры на сегодня" - это сброс фильтрации, показываем все трекеры на выбранный день
+                        // Фильтрация по расписанию уже применена выше
+                        return true
+                    case .completed:
+                        // Завершенные трекеры на выбранную дату
+                        return completedTrackers.contains { record in
+                            record.id == tracker.id && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
+                        }
+                    case .notCompleted:
+                        // Не завершенные трекеры на выбранную дату
+                        return !completedTrackers.contains { record in
+                            record.id == tracker.id && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
+                        }
+                    }
+                }
+                
+                if filteredTrackers.isEmpty {
+                    return nil
+                }
+                
+                return TrackerCategory(title: category.title, trackers: filteredTrackers)
+            }
+        }
+        
+        visibleCategories = filteredByScheduleAndSearch
+        
         collectionView.reloadData()
         
+        // Определяем, есть ли трекеры на выбранный день (без учета фильтра)
+        let hasTrackersForSelectedDate = !categories.compactMap { category in
+            let trackersForDate = category.trackers.filter { tracker in
+                if tracker.schedule.isEmpty {
+                    return true
+                } else {
+                    return tracker.schedule.contains(currentWeekDay)
+                }
+            }
+            return trackersForDate.isEmpty ? nil : category
+        }.isEmpty
+        
+        // Скрываем кнопку фильтров, если нет трекеров на выбранный день
+        filtersButton.isHidden = !hasTrackersForSelectedDate
+        
+        // Обновляем состояние пустого экрана
         let hasVisibleTrackers = !visibleCategories.isEmpty
-        emptyStateImageView.isHidden = hasVisibleTrackers
-        emptyStateLabel.isHidden = hasVisibleTrackers
+        let hasActiveFilter = currentFilter != nil && currentFilter != .all && currentFilter != .today
+        
+        if hasActiveFilter && !hasVisibleTrackers {
+            // Показываем "Ничего не найдено" если применен фильтр и ничего не найдено
+            emptyStateImageView.isHidden = true
+            emptyStateLabel.isHidden = true
+            nothingFoundImageView.isHidden = false
+            nothingFoundLabel.isHidden = false
+            collectionView.isHidden = true
+        } else if !hasVisibleTrackers {
+            // Показываем стандартную заглушку если нет трекеров вообще
+            emptyStateImageView.isHidden = false
+            emptyStateLabel.isHidden = false
+            nothingFoundImageView.isHidden = true
+            nothingFoundLabel.isHidden = true
+            collectionView.isHidden = true
+        } else {
+            // Есть трекеры для отображения
+            emptyStateImageView.isHidden = true
+            emptyStateLabel.isHidden = true
+            nothingFoundImageView.isHidden = true
+            nothingFoundLabel.isHidden = true
+            collectionView.isHidden = false
+        }
     }
     
     @objc private func searchTextChanged() {
@@ -331,6 +481,54 @@ extension TrackersViewController: UICollectionViewDataSource {
         ])
         
         return header
+    }
+}
+
+extension TrackersViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
+            guard let self = self else { return UIMenu(title: "", children: []) }
+            let tracker = self.visibleCategories[indexPath.section].trackers[indexPath.item]
+            
+            let pinAction = UIAction(
+                title: "Закрепить",
+                image: UIImage(systemName: "pin")
+            ) { _ in
+                self.pinTracker(tracker, at: indexPath)
+            }
+            
+            let editAction = UIAction(
+                title: "Редактировать",
+                image: UIImage(systemName: "pencil")
+            ) { _ in
+                self.editTracker(tracker, at: indexPath)
+            }
+            
+            let deleteAction = UIAction(
+                title: "Удалить",
+                image: UIImage(systemName: "trash"),
+                attributes: .destructive
+            ) { _ in
+                self.deleteTracker(tracker, at: indexPath)
+            }
+            
+            return UIMenu(title: "", children: [pinAction, editAction, deleteAction])
+        }
+    }
+    
+    private func pinTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+        // Заглушка для функциональности закрепления (дополнительная задача)
+        print("Закрепить трекер: \(tracker.name)")
+    }
+    
+    private func editTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+        // Заглушка для функциональности редактирования
+        print("Редактировать трекер: \(tracker.name)")
+    }
+    
+    private func deleteTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+        // Заглушка для функциональности удаления
+        print("Удалить трекер: \(tracker.name)")
     }
 }
 
@@ -433,6 +631,32 @@ extension TrackersViewController: TrackerRecordStoreDelegate {
             self?.loadCompletedTrackers()
             self?.collectionView.reloadData()
         }
+    }
+}
+
+extension TrackersViewController: FiltersViewControllerDelegate {
+    func didSelectFilter(_ filter: TrackerFilter) {
+        // Если выбран "Трекеры на сегодня", устанавливаем текущую дату
+        if filter == .today {
+            currentDate = Date()
+            datePicker.date = currentDate
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "dd.MM.yy"
+            dateLabel.text = dateFormatter.string(from: currentDate)
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.hideDatePickerText()
+            }
+        }
+        
+        // Если выбран "Все трекеры" или "Трекеры на сегодня", сбрасываем фильтр
+        if filter == .all || filter == .today {
+            currentFilter = nil
+        } else {
+            currentFilter = filter
+        }
+        filterTrackers()
     }
 }
 
