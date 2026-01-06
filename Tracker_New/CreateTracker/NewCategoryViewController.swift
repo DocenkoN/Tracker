@@ -15,7 +15,9 @@ final class NewCategoryViewController: UIViewController {
         let label = UILabel()
         label.text = "Новая категория"
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -24,7 +26,22 @@ final class NewCategoryViewController: UIViewController {
     private lazy var categoryTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Введите название категории"
-        textField.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        textField.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
+        textField.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Введите название категории",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.56, alpha: 1.0) : 
+                    UIColor(white: 0.56, alpha: 1.0)
+            }]
+        )
         textField.layer.cornerRadius = 16
         textField.font = .systemFont(ofSize: 17)
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -43,7 +60,9 @@ final class NewCategoryViewController: UIViewController {
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Готово", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = UIColor(red: 174/255, green: 175/255, blue: 180/255, alpha: 1.0)
         button.layer.cornerRadius = 16
@@ -86,7 +105,9 @@ final class NewCategoryViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
         view.addSubview(titleLabel)
         view.addSubview(categoryTextField)
@@ -115,10 +136,19 @@ final class NewCategoryViewController: UIViewController {
         doneButton.isEnabled = hasText
         
         let inactiveColor = UIColor(red: 174/255, green: 175/255, blue: 180/255, alpha: 1.0)
-        let activeColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        let activeColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        }
         
         UIView.animate(withDuration: 0.2) {
             self.doneButton.backgroundColor = hasText ? activeColor : inactiveColor
+            self.doneButton.setTitleColor(UIColor { traitCollection in
+                if hasText {
+                    return traitCollection.userInterfaceStyle == .dark ? .black : .white
+                } else {
+                    return .white
+                }
+            }, for: .normal)
         }
     }
     

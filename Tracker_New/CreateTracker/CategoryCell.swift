@@ -9,7 +9,9 @@ final class CategoryCell: UITableViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .left
         label.baselineAdjustment = .alignBaselines
@@ -86,6 +88,9 @@ final class CategoryCell: UITableViewCell {
     func configure(with model: CategoryCellModel) {
         titleLabel.text = model.title
         checkmarkImageView.isHidden = !model.isSelected
+        
+        // Фон всегда прозрачный, независимо от темы
+        backgroundColor = .clear
     }
 }
 

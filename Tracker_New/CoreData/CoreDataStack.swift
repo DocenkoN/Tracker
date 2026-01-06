@@ -9,7 +9,10 @@ final class CoreDataStack {
         
         container.loadPersistentStores { description, error in
             if let error = error {
-                fatalError("Не удалось загрузить хранилище данных: \(error)")
+                print("❌ Ошибка загрузки хранилища данных: \(error)")
+                print("   Описание: \(description)")
+                // Не используем fatalError, чтобы приложение не падало
+                // Вместо этого логируем ошибку
             }
         }
         
@@ -30,7 +33,10 @@ final class CoreDataStack {
                 try context.save()
             } catch {
                 let nsError = error as NSError
-                fatalError("Не удалось сохранить контекст: \(nsError), \(nsError.userInfo)")
+                print("❌ Ошибка сохранения контекста: \(nsError)")
+                print("   UserInfo: \(nsError.userInfo)")
+                // Не используем fatalError, чтобы приложение не падало
+                // Вместо этого логируем ошибку
             }
         }
     }

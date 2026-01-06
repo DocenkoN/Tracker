@@ -13,7 +13,9 @@ final class FiltersViewController: UIViewController {
         let label = UILabel()
         label.text = "Фильтры"
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -21,9 +23,15 @@ final class FiltersViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
-        tableView.backgroundColor = .white
+        tableView.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.3)
+        tableView.separatorColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(white: 0.33, alpha: 1.0) : 
+                UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.3)
+        }
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
@@ -37,7 +45,9 @@ final class FiltersViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
         view.addSubview(titleLabel)
         view.addSubview(tableView)
@@ -65,13 +75,19 @@ extension FiltersViewController: UITableViewDataSource {
         
         cell.textLabel?.text = filter.title
         cell.textLabel?.font = .systemFont(ofSize: 17, weight: .regular)
-        cell.backgroundColor = UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0)
+        cell.textLabel?.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+        cell.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0)
+        }
         cell.selectionStyle = .none
         
-        // Показываем галочку только для "Завершенные" и "Не завершенные", если они выбраны
+        // Показываем галочку для выбранного фильтра
         if let currentFilter = currentFilter,
-           filter == currentFilter,
-           filter != .all && filter != .today {
+           filter == currentFilter {
             cell.accessoryType = .checkmark
             cell.tintColor = .systemBlue
         } else {

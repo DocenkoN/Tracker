@@ -2,10 +2,32 @@ import UIKit
 
 final class TabBarController: UITabBarController {
     
+    private var topBorder: CALayer?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupTabs()
         setupAppearance()
+    }
+    
+    @available(iOS 17.0, *)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            updateAppearance()
+        }
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            self?.updateAppearance()
+        }, completion: nil)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateTopBorder()
     }
     
     private func setupTabs() {
@@ -29,15 +51,40 @@ final class TabBarController: UITabBarController {
     }
     
     private func setupAppearance() {
-        tabBar.backgroundColor = .white
+        updateAppearance()
+    }
+    
+    private func updateAppearance() {
+        tabBar.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : .white
+        }
+        tabBar.barTintColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : .white
+        }
         tabBar.tintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
         tabBar.unselectedItemTintColor = UIColor(red: 0.68, green: 0.69, blue: 0.71, alpha: 1.0)
         
-        // Добавляем верхнюю границу
-        let topBorder = CALayer()
-        topBorder.frame = CGRect(x: 0, y: 0, width: tabBar.frame.width, height: 0.5)
-        topBorder.backgroundColor = UIColor(red: 0.82, green: 0.82, blue: 0.84, alpha: 1.0).cgColor
-        tabBar.layer.addSublayer(topBorder)
+        updateTopBorder()
+    }
+    
+    private func updateTopBorder() {
+        // Удаляем старую границу
+        topBorder?.removeFromSuperlayer()
+        
+        // Создаем новую границу
+        let border = CALayer()
+        border.frame = CGRect(x: 0, y: 0, width: tabBar.frame.width, height: 0.5)
+        
+        let borderColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 82/255, green: 82/255, blue: 84/255, alpha: 1.0) :
+                UIColor(red: 0.82, green: 0.82, blue: 0.84, alpha: 1.0)
+        }
+        border.backgroundColor = borderColor.cgColor
+        tabBar.layer.addSublayer(border)
+        topBorder = border
     }
 }
 

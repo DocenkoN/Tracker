@@ -15,7 +15,9 @@ final class CategorySelectionViewController: UIViewController {
         let label = UILabel()
         label.text = "Категория"
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -26,11 +28,19 @@ final class CategorySelectionViewController: UIViewController {
         tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        tableView.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
         tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tableView.separatorColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(white: 0.33, alpha: 1.0) : 
+                UIColor(white: 0.82, alpha: 1.0)
+        }
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.rowHeight = 75
         tableView.estimatedRowHeight = 75
@@ -43,9 +53,13 @@ final class CategorySelectionViewController: UIViewController {
     private lazy var addCategoryButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Добавить категорию", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(addCategoryButtonTapped), for: .touchUpInside)
@@ -65,7 +79,9 @@ final class CategorySelectionViewController: UIViewController {
         let label = UILabel()
         label.text = "Привычки и события можно\nобъединить по смыслу"
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        }
         label.textAlignment = .center
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -95,7 +111,9 @@ final class CategorySelectionViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
         view.addSubview(titleLabel)
         view.addSubview(tableView)
@@ -185,14 +203,14 @@ final class CategorySelectionViewController: UIViewController {
     }
     
     private func updateAddCategoryButton() {
-        let hasSelectedCategory = viewModel.selectedCategory != nil
-        
+        // По макету кнопка всегда белая в темной теме, независимо от выбора категории
         UIView.animate(withDuration: 0.2) {
-            if hasSelectedCategory {
-                self.addCategoryButton.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
-            } else {
-                self.addCategoryButton.backgroundColor = .black
+            self.addCategoryButton.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
             }
+            self.addCategoryButton.setTitleColor(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .black : .white
+            }, for: .normal)
         }
     }
     

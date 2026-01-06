@@ -22,7 +22,9 @@ final class NewHabitViewController: UIViewController {
         let label = UILabel()
         label.text = "Новая привычка"
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -31,7 +33,22 @@ final class NewHabitViewController: UIViewController {
     private lazy var nameTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Введите название трекера"
-        textField.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        textField.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
+        textField.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Введите название трекера",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.56, alpha: 1.0) : 
+                    UIColor(white: 0.56, alpha: 1.0)
+            }]
+        )
         textField.layer.cornerRadius = 16
         textField.font = .systemFont(ofSize: 17)
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -47,12 +64,20 @@ final class NewHabitViewController: UIViewController {
         let tableView = UITableView()
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        tableView.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tableView.separatorColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(white: 0.33, alpha: 1.0) : 
+                UIColor(white: 0.82, alpha: 1.0)
+        }
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -61,10 +86,15 @@ final class NewHabitViewController: UIViewController {
     private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Отменить", for: .normal)
-        button.setTitleColor(.red, for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 245/255, green: 107/255, blue: 108/255, alpha: 1.0) : .red
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .white
-        button.layer.borderColor = UIColor.red.cgColor
+        button.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                .clear : .white
+        }
         button.layer.borderWidth = 1
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -89,7 +119,9 @@ final class NewHabitViewController: UIViewController {
         let label = UILabel()
         label.text = "Emoji"
         label.font = .systemFont(ofSize: 19, weight: .bold)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -113,7 +145,9 @@ final class NewHabitViewController: UIViewController {
         let label = UILabel()
         label.text = "Цвет"
         label.font = .systemFont(ofSize: 19, weight: .bold)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -178,6 +212,23 @@ final class NewHabitViewController: UIViewController {
         setupUI()
         nameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         updateTableViewHeight()
+        updateCancelButtonBorder()
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            updateCancelButtonBorder()
+        }
+    }
+    
+    private func updateCancelButtonBorder() {
+        let borderColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 245/255, green: 107/255, blue: 108/255, alpha: 1.0) : 
+                .red
+        }
+        cancelButton.layer.borderColor = borderColor.cgColor
     }
     
     private func updateCreateButtonState() {
@@ -190,11 +241,23 @@ final class NewHabitViewController: UIViewController {
         let isValid = isNameValid && isCategorySelected && isScheduleSelected && isEmojiSelected && isColorSelected
         
         createButton.isEnabled = isValid
-        createButton.backgroundColor = isValid ? .black : .systemGray
+        if isValid {
+            createButton.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            }
+            createButton.setTitleColor(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .black : .white
+            }, for: .normal)
+        } else {
+            createButton.backgroundColor = .systemGray
+            createButton.setTitleColor(.white, for: .normal)
+        }
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -325,6 +388,9 @@ extension NewHabitViewController: UITableViewDataSource {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "OptionCell")
         
         cell.textLabel?.text = options[indexPath.row]
+        cell.textLabel?.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         cell.accessoryType = .disclosureIndicator
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
@@ -338,12 +404,18 @@ extension NewHabitViewController: UITableViewDataSource {
         
         if indexPath.row == 0 {
             cell.detailTextLabel?.text = selectedCategory
-            cell.detailTextLabel?.textColor = .gray
+            cell.detailTextLabel?.textColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.56, alpha: 1.0) : .gray
+            }
             cell.detailTextLabel?.font = .systemFont(ofSize: 14)
         } else if indexPath.row == 1 {
             if !selectedSchedule.isEmpty {
                 cell.detailTextLabel?.text = formatSchedule(selectedSchedule)
-                cell.detailTextLabel?.textColor = .gray
+                cell.detailTextLabel?.textColor = UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? 
+                        UIColor(white: 0.56, alpha: 1.0) : .gray
+                }
                 cell.detailTextLabel?.font = .systemFont(ofSize: 14)
             }
         }
@@ -490,7 +562,11 @@ final class EmojiCell: UICollectionViewCell {
     func configure(with emoji: String, isSelected: Bool) {
         emojiLabel.text = emoji
         if isSelected {
-            contentView.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+            contentView.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.33, alpha: 1.0) : 
+                    UIColor(white: 0.9, alpha: 1.0)
+            }
             contentView.layer.cornerRadius = 16
             contentView.layer.borderWidth = 0
         } else {

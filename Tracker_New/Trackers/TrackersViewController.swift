@@ -408,10 +408,6 @@ final class TrackersViewController: UIViewController {
         
         // Применяем дополнительный фильтр, если он выбран
         if let filter = currentFilter {
-            let today = Calendar.current.startOfDay(for: Date())
-            let selectedDate = Calendar.current.startOfDay(for: currentDate)
-            let isToday = Calendar.current.isDate(selectedDate, inSameDayAs: today)
-            
             filteredByScheduleAndSearch = filteredByScheduleAndSearch.compactMap { category in
                 let filteredTrackers = category.trackers.filter { tracker in
                     switch filter {
@@ -617,8 +613,67 @@ extension TrackersViewController: UICollectionViewDelegate {
         print("[Analytics] event: click, screen: Main, item: delete")
         #endif
         
-        // Заглушка для функциональности удаления
-        print("Удалить трекер: \(tracker.name)")
+        // Показываем подтверждение удаления
+        let alert = UIAlertController(
+            title: nil,
+            message: "Уверены, что хотите удалить трекер?",
+            preferredStyle: .actionSheet
+        )
+        
+        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+            self?.performDeleteTracker(tracker)
+        }
+        
+        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        
+        // Для iPad нужно указать sourceView
+        if let popover = alert.popoverPresentationController {
+            if let cell = collectionView.cellForItem(at: indexPath) {
+                popover.sourceView = cell
+                popover.sourceRect = cell.bounds
+            } else {
+                popover.sourceView = view
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            }
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    private func performDeleteTracker(_ tracker: Tracker) {
+        do {
+            // Удаляем все записи трекера
+            try trackerRecordStore.deleteRecords(for: tracker.id)
+            
+            // Удаляем трекер из CoreData
+            if let trackerCoreData = try trackerStore.fetchTracker(by: tracker.id) {
+                try trackerStore.deleteTracker(trackerCoreData)
+            }
+            
+            CoreDataStack.shared.saveContext()
+            
+            // Обновляем данные и UI
+            loadCategories()
+            loadCompletedTrackers()
+            filterTrackers()
+            
+            // Отправляем уведомление для обновления статистики
+            NotificationCenter.default.post(name: NSNotification.Name("TrackerDidUpdate"), object: nil)
+        } catch {
+            print("Ошибка удаления трекера: \(error)")
+            
+            // Показываем ошибку пользователю
+            let errorAlert = UIAlertController(
+                title: "Ошибка",
+                message: "Не удалось удалить трекер: \(error.localizedDescription)",
+                preferredStyle: .alert
+            )
+            errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(errorAlert, animated: true)
+        }
     }
 }
 
@@ -751,12 +806,8 @@ extension TrackersViewController: FiltersViewControllerDelegate {
             }
         }
         
-        // Если выбран "Все трекеры" или "Трекеры на сегодня", сбрасываем фильтр
-        if filter == .all || filter == .today {
-            currentFilter = nil
-        } else {
-            currentFilter = filter
-        }
+        // Устанавливаем выбранный фильтр для всех случаев
+        currentFilter = filter
         filterTrackers()
     }
 }

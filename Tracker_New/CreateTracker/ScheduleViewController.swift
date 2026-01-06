@@ -23,7 +23,9 @@ final class ScheduleViewController: UIViewController {
         let label = UILabel()
         label.text = "Расписание"
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -34,12 +36,20 @@ final class ScheduleViewController: UIViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DayCell")
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        tableView.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 65/255, green: 65/255, blue: 65/255, alpha: 0.85) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tableView.separatorColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(white: 0.33, alpha: 1.0) : 
+                UIColor(white: 0.82, alpha: 1.0)
+        }
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -48,9 +58,13 @@ final class ScheduleViewController: UIViewController {
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle("Готово", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(doneButtonTapped), for: .touchUpInside)
@@ -63,7 +77,9 @@ final class ScheduleViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
         view.addSubview(titleLabel)
         view.addSubview(tableView)
@@ -118,6 +134,9 @@ extension ScheduleViewController: UITableViewDataSource {
         
         cell.textLabel?.text = weekDay.name
         cell.textLabel?.font = .systemFont(ofSize: 17)
+        cell.textLabel?.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
         

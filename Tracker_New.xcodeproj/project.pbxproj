@@ -59,15 +59,11 @@
 		};
 		9502747A2EBCBD5D008E8D16 /* Tracker_NewTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Tracker_NewTests;
 			sourceTree = "<group>";
 		};
 		950274842EBCBD5D008E8D16 /* Tracker_NewUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = Tracker_NewUITests;
 			sourceTree = "<group>";
 		};
@@ -135,7 +131,6 @@
 				7346BA71F352A833D2924EF0 /* Pods-Tracker_New.debug.xcconfig */,
 				E2FE1EBF9D74A262F3ABB648 /* Pods-Tracker_New.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
