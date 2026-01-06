@@ -1,4 +1,5 @@
 import UIKit
+import YandexMobileMetrica
 
 final class TrackersViewController: UIViewController {
     
@@ -195,6 +196,30 @@ final class TrackersViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         hideDatePickerText()
+        
+        // Аналитика: открытие экрана
+        let parameters: [String: Any] = [
+            "event": "open",
+            "screen": "Main"
+        ]
+        YMMYandexMetrica.reportEvent("open", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: open, screen: Main")
+        #endif
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        // Аналитика: закрытие экрана
+        let parameters: [String: Any] = [
+            "event": "close",
+            "screen": "Main"
+        ]
+        YMMYandexMetrica.reportEvent("close", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: close, screen: Main")
+        #endif
     }
     
     private func hideDatePickerText() {
@@ -277,6 +302,17 @@ final class TrackersViewController: UIViewController {
     }
     
     @objc private func addButtonTapped() {
+        // Аналитика: тап на кнопке добавления трека
+        let parameters: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "add_track"
+        ]
+        YMMYandexMetrica.reportEvent("click", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: click, screen: Main, item: add_track")
+        #endif
+        
         let newHabitVC = NewHabitViewController()
         newHabitVC.delegate = self
         newHabitVC.modalPresentationStyle = .pageSheet
@@ -284,6 +320,17 @@ final class TrackersViewController: UIViewController {
     }
     
     @objc private func filtersButtonTapped() {
+        // Аналитика: тап на кнопке фильтра
+        let parameters: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "filter"
+        ]
+        YMMYandexMetrica.reportEvent("click", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: click, screen: Main, item: filter")
+        #endif
+        
         let filtersVC = FiltersViewController()
         filtersVC.currentFilter = currentFilter
         filtersVC.delegate = self
@@ -505,6 +552,7 @@ extension TrackersViewController: UICollectionViewDataSource {
 }
 
 extension TrackersViewController: UICollectionViewDelegate {
+    
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
             guard let self = self else { return UIMenu(title: "", children: []) }
@@ -542,11 +590,33 @@ extension TrackersViewController: UICollectionViewDelegate {
     }
     
     private func editTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+        // Аналитика: выбор редактирования в контекстном меню
+        let parameters: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "edit"
+        ]
+        YMMYandexMetrica.reportEvent("click", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: click, screen: Main, item: edit")
+        #endif
+        
         // Заглушка для функциональности редактирования
         print("Редактировать трекер: \(tracker.name)")
     }
     
     private func deleteTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+        // Аналитика: выбор удаления в контекстном меню
+        let parameters: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "delete"
+        ]
+        YMMYandexMetrica.reportEvent("click", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: click, screen: Main, item: delete")
+        #endif
+        
         // Заглушка для функциональности удаления
         print("Удалить трекер: \(tracker.name)")
     }
@@ -593,6 +663,17 @@ extension TrackersViewController: NewHabitViewControllerDelegate {
 
 extension TrackersViewController: TrackerCellDelegate {
     func didTapPlusButton(for trackerId: UUID) {
+        // Аналитика: тап на кнопке о выполнении трека
+        let parameters: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "track"
+        ]
+        YMMYandexMetrica.reportEvent("click", parameters: parameters)
+        #if DEBUG
+        print("[Analytics] event: click, screen: Main, item: track")
+        #endif
+        
         let today = Calendar.current.startOfDay(for: Date())
         let selectedDate = Calendar.current.startOfDay(for: currentDate)
         
