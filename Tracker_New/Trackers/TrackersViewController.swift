@@ -63,7 +63,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Трекеры"
+        label.text = NSLocalizedString("Trackers", comment: "Main screen title")
         label.font = .systemFont(ofSize: 34, weight: .bold)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -139,7 +139,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var filtersButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Фильтры", for: .normal)
+        button.setTitle(NSLocalizedString("Filters", comment: "Filters button"), for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = UIColor(red: 0.2, green: 0.4, blue: 0.9, alpha: 1.0)

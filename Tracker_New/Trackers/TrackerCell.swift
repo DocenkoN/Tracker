@@ -103,12 +103,23 @@ final class TrackerCell: UICollectionViewCell {
         plusButton.backgroundColor = tracker.color
         
         let daysText: String
-        if days % 10 == 1 && days % 100 != 11 {
-            daysText = "\(days) день"
-        } else if (days % 10 >= 2 && days % 10 <= 4) && !(days % 100 >= 12 && days % 100 <= 14) {
-            daysText = "\(days) дня"
+        if days == 1 {
+            let dayString = NSLocalizedString("day", comment: "Day singular")
+            daysText = "\(days) \(dayString)"
         } else {
-            daysText = "\(days) дней"
+            // Для русского языка нужна правильная форма множественного числа
+            let locale = Locale.current
+            if locale.languageCode == "ru" {
+                // Русский язык: 2-4 дня, 5+ дней
+                if (days % 10 >= 2 && days % 10 <= 4) && !(days % 100 >= 12 && days % 100 <= 14) {
+                    daysText = "\(days) \(NSLocalizedString("days_plural", comment: "Days 2-4"))"
+                } else {
+                    daysText = "\(days) \(NSLocalizedString("days", comment: "Days 5+"))"
+                }
+            } else {
+                // Английский и другие языки: просто days
+                daysText = "\(days) \(NSLocalizedString("days", comment: "Days plural"))"
+            }
         }
         daysLabel.text = daysText
         

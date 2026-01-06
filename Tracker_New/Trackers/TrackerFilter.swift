@@ -1,13 +1,22 @@
 import Foundation
 
-enum TrackerFilter: String, CaseIterable {
-    case all = "Все трекеры"
-    case today = "Трекеры на сегодня"
-    case completed = "Завершенные"
-    case notCompleted = "Не завершенные"
+enum TrackerFilter: CaseIterable {
+    case all
+    case today
+    case completed
+    case notCompleted
     
     var title: String {
-        return rawValue
+        switch self {
+        case .all:
+            return NSLocalizedString("All trackers", comment: "All trackers filter")
+        case .today:
+            return NSLocalizedString("Trackers for today", comment: "Trackers for today filter")
+        case .completed:
+            return NSLocalizedString("Completed", comment: "Completed filter")
+        case .notCompleted:
+            return NSLocalizedString("Not completed", comment: "Not completed filter")
+        }
     }
 }
 

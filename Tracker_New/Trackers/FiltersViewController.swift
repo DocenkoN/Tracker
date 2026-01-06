@@ -11,7 +11,7 @@ final class FiltersViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Фильтры"
+        label.text = NSLocalizedString("Filters", comment: "Filters screen title")
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black

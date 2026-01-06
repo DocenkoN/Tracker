@@ -1,0 +1,23 @@
+/* 
+  Localizable.strings (Russian)
+  Tracker_New
+
+  Created by Localization
+*/
+
+// Main Screen
+"Trackers" = "Трекеры";
+"Statistics" = "Статистика";
+"Filters" = "Фильтры";
+
+// Days
+"day" = "день";
+"days" = "дней";
+"days_plural" = "дня";
+
+// Filter Options
+"All trackers" = "Все трекеры";
+"Trackers for today" = "Трекеры на сегодня";
+"Completed" = "Завершенные";
+"Not completed" = "Не завершенные";
+

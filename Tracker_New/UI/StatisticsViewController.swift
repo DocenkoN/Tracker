@@ -7,7 +7,7 @@ final class StatisticsViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Статистика"
+        label.text = NSLocalizedString("Statistics", comment: "Statistics screen title")
         label.font = .systemFont(ofSize: 34, weight: .bold)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
