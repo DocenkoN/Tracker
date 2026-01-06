@@ -88,6 +88,7 @@ final class TrackersViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         collectionView.translatesAutoresizingMaskIntoConstraints = false
+        collectionView.alwaysBounceVertical = true
         collectionView.register(TrackerCell.self, forCellWithReuseIdentifier: TrackerCell.identifier)
         collectionView.register(UICollectionReusableView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "Header")
         collectionView.dataSource = self
