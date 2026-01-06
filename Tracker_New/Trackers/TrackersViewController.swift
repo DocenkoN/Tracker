@@ -117,7 +117,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var nothingFoundImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "Image_star")
+        imageView.image = UIImage(named: "monocle")
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.isHidden = true
@@ -454,20 +454,21 @@ final class TrackersViewController: UIViewController {
             return trackersForDate.isEmpty ? nil : category
         }.isEmpty
         
-        // Скрываем кнопку фильтров, если нет трекеров на выбранный день
-        filtersButton.isHidden = !hasTrackersForSelectedDate
-        
         // Обновляем состояние пустого экрана
         let hasVisibleTrackers = !visibleCategories.isEmpty
         let hasActiveFilter = currentFilter != nil && currentFilter != .all && currentFilter != .today
+        let hasActiveSearch = !searchText.isEmpty
+        let showNothingFound = (hasActiveFilter || hasActiveSearch) && !hasVisibleTrackers
         
-        if hasActiveFilter && !hasVisibleTrackers {
-            // Показываем "Ничего не найдено" если применен фильтр и ничего не найдено
+        if showNothingFound {
+            // Показываем "Ничего не найдено" если применен фильтр или поиск и ничего не найдено
             emptyStateImageView.isHidden = true
             emptyStateLabel.isHidden = true
             nothingFoundImageView.isHidden = false
             nothingFoundLabel.isHidden = false
             collectionView.isHidden = true
+            // Скрываем кнопку фильтров при показе "Ничего не найдено"
+            filtersButton.isHidden = true
         } else if !hasVisibleTrackers {
             // Показываем стандартную заглушку если нет трекеров вообще
             emptyStateImageView.isHidden = false
@@ -475,6 +476,8 @@ final class TrackersViewController: UIViewController {
             nothingFoundImageView.isHidden = true
             nothingFoundLabel.isHidden = true
             collectionView.isHidden = true
+            // Скрываем кнопку фильтров, если нет трекеров на выбранный день
+            filtersButton.isHidden = !hasTrackersForSelectedDate
         } else {
             // Есть трекеры для отображения
             emptyStateImageView.isHidden = true
@@ -482,6 +485,8 @@ final class TrackersViewController: UIViewController {
             nothingFoundImageView.isHidden = true
             nothingFoundLabel.isHidden = true
             collectionView.isHidden = false
+            // Показываем кнопку фильтров, если есть трекеры на выбранный день
+            filtersButton.isHidden = !hasTrackersForSelectedDate
         }
     }
     
