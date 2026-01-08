@@ -1,8 +1,9 @@
 import UIKit
 
-final class CategoryCell: UITableViewCell {
+final class ScheduleCell: UITableViewCell {
     
-    static let identifier = "CategoryCell"
+    // MARK: - Properties
+    var onSwitchChanged: ((Bool) -> Void)?
     
     // MARK: - UI elements
     private lazy var containerView: UIView = {
@@ -27,13 +28,11 @@ final class CategoryCell: UITableViewCell {
         return label
     }()
     
-    private lazy var checkmarkImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "checkmark")
-        imageView.tintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
-        imageView.isHidden = true
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
+    private lazy var daySwitch: UISwitch = {
+        let toggle = UISwitch()
+        toggle.onTintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
+        toggle.translatesAutoresizingMaskIntoConstraints = false
+        return toggle
     }()
     
     private lazy var separatorView: UIView = {
@@ -51,6 +50,7 @@ final class CategoryCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupUI()
+        setupActions()
     }
     
     required init?(coder: NSCoder) {
@@ -64,7 +64,7 @@ final class CategoryCell: UITableViewCell {
         
         contentView.addSubview(containerView)
         containerView.addSubview(titleLabel)
-        containerView.addSubview(checkmarkImageView)
+        containerView.addSubview(daySwitch)
         containerView.addSubview(separatorView)
         
         setupConstraints()
@@ -80,12 +80,11 @@ final class CategoryCell: UITableViewCell {
             
             titleLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: checkmarkImageView.leadingAnchor, constant: -16),
             
-            checkmarkImageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            checkmarkImageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
-            checkmarkImageView.widthAnchor.constraint(equalToConstant: 24),
-            checkmarkImageView.heightAnchor.constraint(equalToConstant: 24),
+            daySwitch.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            daySwitch.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
+            daySwitch.widthAnchor.constraint(equalToConstant: 51),
+            daySwitch.heightAnchor.constraint(equalToConstant: 31),
             
             separatorView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 16),
             separatorView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -16),
@@ -94,10 +93,14 @@ final class CategoryCell: UITableViewCell {
         ])
     }
     
+    private func setupActions() {
+        daySwitch.addTarget(self, action: #selector(switchChanged), for: .valueChanged)
+    }
+    
     // MARK: - Public methods
-    func configure(title: String, isSelected: Bool, isFirst: Bool, isLast: Bool) {
-        titleLabel.text = title
-        checkmarkImageView.isHidden = !isSelected
+    func configure(dayName: String, isSelected: Bool, isFirst: Bool, isLast: Bool) {
+        titleLabel.text = dayName
+        daySwitch.isOn = isSelected
         containerView.layer.cornerRadius = 0
         
         if isFirst && isLast {
@@ -114,8 +117,9 @@ final class CategoryCell: UITableViewCell {
         separatorView.isHidden = isLast
     }
     
-    // Для обратной совместимости с существующим кодом
-    func configure(with model: CategoryCellModel) {
-        configure(title: model.title, isSelected: model.isSelected, isFirst: false, isLast: false)
+    // MARK: - Actions
+    @objc private func switchChanged() {
+        onSwitchChanged?(daySwitch.isOn)
     }
 }
+

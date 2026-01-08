@@ -10,18 +10,6 @@ final class CategorySelectionViewController: UIViewController {
     
     private let viewModel: CategorySelectionViewModel
     
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Категория"
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
-        }
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .plain)
         tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
@@ -101,16 +89,21 @@ final class CategorySelectionViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         
-        view.addSubview(titleLabel)
+        navigationItem.title = "Категория"
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            },
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
+        ]
+        navigationItem.hidesBackButton = true
+        
         view.addSubview(tableView)
         view.addSubview(emptyStateImageView)
         view.addSubview(emptyStateLabel)
         view.addSubview(addCategoryButton)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -224,7 +217,11 @@ extension CategorySelectionViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        cell.configure(with: cellModel)
+        let numberOfRows = viewModel.numberOfRows()
+        let isFirst = indexPath.row == 0
+        let isLast = indexPath.row == numberOfRows - 1
+        
+        cell.configure(title: cellModel.title, isSelected: cellModel.isSelected, isFirst: isFirst, isLast: isLast)
         
         return cell
     }

@@ -46,8 +46,8 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var plusButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "plus"), for: .normal)
-        button.tintColor = .white
         button.layer.cornerRadius = 17
+        button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
         return button
@@ -100,7 +100,10 @@ final class TrackerCell: UICollectionViewCell {
         colorView.backgroundColor = tracker.color
         emojiLabel.text = tracker.emoji
         nameLabel.text = tracker.name
-        plusButton.backgroundColor = tracker.color
+        plusButton.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
+        plusButton.tintColor = tracker.color
         
         let daysText: String
         if days == 1 {
@@ -109,7 +112,7 @@ final class TrackerCell: UICollectionViewCell {
         } else {
             // Для русского языка нужна правильная форма множественного числа
             let locale = Locale.current
-            if locale.languageCode == "ru" {
+            if locale.language.languageCode?.identifier == "ru" {
                 // Русский язык: 2-4 дня, 5+ дней
                 if (days % 10 >= 2 && days % 10 <= 4) && !(days % 100 >= 12 && days % 100 <= 14) {
                     daysText = "\(days) \(NSLocalizedString("days_plural", comment: "Days 2-4"))"
@@ -125,13 +128,16 @@ final class TrackerCell: UICollectionViewCell {
         
         plusButton.isEnabled = !isFutureDate
         
+        let plusImage = UIImage(systemName: "plus")?.withRenderingMode(.alwaysTemplate)
+        let doneImage = UIImage(systemName: "checkmark")?.withRenderingMode(.alwaysTemplate)
+        
         if isCompleted {
-            plusButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
-            plusButton.alpha = 0.3
+            plusButton.setImage(doneImage, for: .normal)
         } else {
-            plusButton.setImage(UIImage(systemName: "plus"), for: .normal)
-            plusButton.alpha = isFutureDate ? 0.3 : 1.0
+            plusButton.setImage(plusImage, for: .normal)
         }
+        
+        plusButton.alpha = isFutureDate ? 0.3 : 1.0
     }
     
     @objc private func plusButtonTapped() {

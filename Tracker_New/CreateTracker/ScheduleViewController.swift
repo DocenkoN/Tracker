@@ -19,21 +19,9 @@ final class ScheduleViewController: UIViewController {
         (.sunday, "Воскресенье")
     ]
     
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Расписание"
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
-        }
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
     private lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .grouped)
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DayCell")
+        tableView.register(ScheduleCell.self, forCellReuseIdentifier: "ScheduleCell")
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = UIColor { traitCollection in
@@ -71,14 +59,19 @@ final class ScheduleViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         
-        view.addSubview(titleLabel)
+        navigationItem.title = "Расписание"
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            },
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
+        ]
+        navigationItem.hidesBackButton = true
+        
         view.addSubview(tableView)
         view.addSubview(doneButton)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -102,15 +95,6 @@ final class ScheduleViewController: UIViewController {
         dismiss(animated: true)
     }
     
-    @objc private func switchValueChanged(_ sender: UISwitch) {
-        let day = weekDays[sender.tag].day
-        
-        if sender.isOn {
-            selectedDays.insert(day)
-        } else {
-            selectedDays.remove(day)
-        }
-    }
 }
 
 extension ScheduleViewController: UITableViewDataSource {
@@ -119,31 +103,28 @@ extension ScheduleViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "DayCell", for: indexPath)
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "ScheduleCell", for: indexPath) as? ScheduleCell else {
+            return UITableViewCell()
+        }
+        
         let weekDay = weekDays[indexPath.row]
+        let isFirst = indexPath.row == 0
+        let isLast = indexPath.row == weekDays.count - 1
         
-        cell.textLabel?.text = weekDay.name
-        cell.textLabel?.font = .systemFont(ofSize: 17)
-        cell.textLabel?.textColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        cell.configure(
+            dayName: weekDay.name,
+            isSelected: selectedDays.contains(weekDay.day),
+            isFirst: isFirst,
+            isLast: isLast
+        )
+        
+        cell.onSwitchChanged = { [weak self] isOn in
+            if isOn {
+                self?.selectedDays.insert(weekDay.day)
+            } else {
+                self?.selectedDays.remove(weekDay.day)
+            }
         }
-        cell.backgroundColor = .clear
-        cell.selectionStyle = .none
-        
-        // Скрываем разделитель для последней ячейки
-        if indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        } else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        }
-        
-        let switchControl = UISwitch()
-        switchControl.isOn = selectedDays.contains(weekDay.day)
-        switchControl.onTintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
-        switchControl.tag = indexPath.row
-        switchControl.addTarget(self, action: #selector(switchValueChanged(_:)), for: .valueChanged)
-        
-        cell.accessoryView = switchControl
         
         return cell
     }

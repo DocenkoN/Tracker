@@ -1,4 +1,5 @@
 import CoreData
+import Foundation
 
 protocol TrackerRecordStoreDelegate: AnyObject {
     func trackerRecordStoreDidUpdate()
@@ -85,6 +86,7 @@ final class TrackerRecordStore: NSObject {
         recordCoreData.tracker = tracker
         
         try context.save()
+        StatisticsService.shared.notifyUpdate()
         return recordCoreData
     }
     
@@ -129,12 +131,14 @@ final class TrackerRecordStore: NSObject {
         
         context.delete(record)
         try context.save()
+        StatisticsService.shared.notifyUpdate()
     }
     
     func deleteRecords(for trackerId: UUID) throws {
         let records = try fetchRecords(for: trackerId)
         records.forEach { context.delete($0) }
         try context.save()
+        StatisticsService.shared.notifyUpdate()
     }
     
     func convertToRecord(_ recordCoreData: TrackerRecordCoreData) -> TrackerRecord? {

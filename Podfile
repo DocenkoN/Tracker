@@ -21,3 +21,12 @@ target 'Tracker_New' do
 
 end
 
+target 'Tracker_NewTests' do
+  # Comment the next line if you don't want to use dynamic frameworks
+  use_frameworks!
+
+  # Inherit dependencies from main target
+  pod 'YandexMobileMetrica', '~> 4.0'
+
+end
+

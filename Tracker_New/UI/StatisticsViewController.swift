@@ -2,6 +2,7 @@ import UIKit
 
 final class StatisticsViewController: UIViewController {
     
+    private let statisticsService = StatisticsService.shared
     private let trackerStore = TrackerStore()
     private let trackerRecordStore = TrackerRecordStore()
     
@@ -63,17 +64,7 @@ final class StatisticsViewController: UIViewController {
     }
     
     private func setupNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTrackerUpdate),
-            name: NSNotification.Name("TrackerDidUpdate"),
-            object: nil
-        )
-        trackerRecordStore.delegate = self
-    }
-    
-    @objc private func handleTrackerUpdate() {
-        loadStatistics()
+        statisticsService.delegate = self
     }
     
     private func setupUI() {
@@ -159,16 +150,11 @@ final class StatisticsViewController: UIViewController {
         emptyStateLabel.isHidden = false
     }
     
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
 }
 
-extension StatisticsViewController: TrackerRecordStoreDelegate {
-    func trackerRecordStoreDidUpdate() {
-        DispatchQueue.main.async { [weak self] in
-            self?.loadStatistics()
-        }
+extension StatisticsViewController: StatisticsServiceDelegate {
+    func statisticsDidUpdate() {
+        loadStatistics()
     }
 }
 

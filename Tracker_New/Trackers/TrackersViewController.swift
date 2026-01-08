@@ -664,9 +664,6 @@ extension TrackersViewController: UICollectionViewDelegate {
             loadCategories()
             loadCompletedTrackers()
             filterTrackers()
-            
-            // Отправляем уведомление для обновления статистики
-            NotificationCenter.default.post(name: NSNotification.Name("TrackerDidUpdate"), object: nil)
         } catch {
             print("Ошибка удаления трекера: \(error)")
             
@@ -762,9 +759,6 @@ extension TrackersViewController: TrackerCellDelegate {
             CoreDataStack.shared.saveContext()
             
             collectionView.reloadData()
-            
-            // Отправляем уведомление для обновления статистики
-            NotificationCenter.default.post(name: NSNotification.Name("TrackerDidUpdate"), object: nil)
         } catch {
             print("Ошибка при работе с записью: \(error)")
         }

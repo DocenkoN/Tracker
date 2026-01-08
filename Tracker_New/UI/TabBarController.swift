@@ -10,7 +10,9 @@ final class TabBarController: UITabBarController {
         setupAppearance()
     }
     
-    @available(iOS 17.0, *)
+    // Deprecated in iOS 17.0, but kept for compatibility with older iOS versions
+    // Dynamic colors update automatically in iOS 17+
+    @available(iOS, deprecated: 17.0, message: "Dynamic colors update automatically in iOS 17+")
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
