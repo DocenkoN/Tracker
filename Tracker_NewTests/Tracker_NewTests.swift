@@ -1,10 +1,10 @@
-import Testing
+import XCTest
 @testable import Tracker_New
 
-struct Tracker_NewTests {
+final class Tracker_NewTests: XCTestCase {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    func testExample() throws {
+        // Write your test here and use APIs like XCTAssert to check expected conditions.
     }
 
 }
