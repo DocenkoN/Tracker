@@ -15,7 +15,7 @@ final class TrackerCell: UICollectionViewCell {
     
     private let emojiLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
+        label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
         label.backgroundColor = UIColor.white.withAlphaComponent(0.3)
         label.layer.cornerRadius = 12
@@ -88,8 +88,8 @@ final class TrackerCell: UICollectionViewCell {
             daysLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
             daysLabel.topAnchor.constraint(equalTo: colorView.bottomAnchor, constant: 16),
             
+            plusButton.topAnchor.constraint(equalTo: colorView.bottomAnchor, constant: 8),
             plusButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
-            plusButton.centerYAnchor.constraint(equalTo: daysLabel.centerYAnchor),
             plusButton.widthAnchor.constraint(equalToConstant: 34),
             plusButton.heightAnchor.constraint(equalToConstant: 34)
         ])

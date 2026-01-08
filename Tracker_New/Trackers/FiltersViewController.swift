@@ -9,29 +9,13 @@ final class FiltersViewController: UIViewController {
     weak var delegate: FiltersViewControllerDelegate?
     var currentFilter: TrackerFilter?
     
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = NSLocalizedString("Filters", comment: "Filters screen title")
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .white : .black
-        }
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
     private lazy var tableView: UITableView = {
-        let tableView = UITableView(frame: .zero, style: .insetGrouped)
+        let tableView = UITableView(frame: .zero, style: .plain)
         tableView.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(white: 0.33, alpha: 1.0) : 
-                UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.3)
-        }
+        tableView.separatorStyle = .none
+        tableView.rowHeight = 75
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.delegate = self
         tableView.dataSource = self
@@ -49,17 +33,22 @@ final class FiltersViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         
-        view.addSubview(titleLabel)
+        navigationItem.title = NSLocalizedString("Filters", comment: "Filters screen title")
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            },
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
+        ]
+        navigationItem.hidesBackButton = true
+        
         view.addSubview(tableView)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 24),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 }
@@ -109,8 +98,5 @@ extension FiltersViewController: UITableViewDelegate {
         dismiss(animated: true)
     }
     
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 75
-    }
 }
 

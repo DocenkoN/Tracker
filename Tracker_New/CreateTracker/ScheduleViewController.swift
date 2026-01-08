@@ -32,25 +32,15 @@ final class ScheduleViewController: UIViewController {
     }()
     
     private lazy var tableView: UITableView = {
-        let tableView = UITableView()
+        let tableView = UITableView(frame: .zero, style: .grouped)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DayCell")
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(red: 65/255, green: 65/255, blue: 65/255, alpha: 0.85) : 
-                UIColor(white: 0.96, alpha: 1.0)
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
-        tableView.layer.cornerRadius = 16
-        tableView.clipsToBounds = true
-        tableView.isScrollEnabled = false
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(white: 0.33, alpha: 1.0) : 
-                UIColor(white: 0.82, alpha: 1.0)
-        }
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorStyle = .none
+        tableView.rowHeight = 75
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -89,10 +79,10 @@ final class ScheduleViewController: UIViewController {
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            tableView.heightAnchor.constraint(equalToConstant: 525),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: doneButton.topAnchor, constant: -16),
             
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),

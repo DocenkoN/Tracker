@@ -9,7 +9,6 @@ final class CategorySelectionViewController: UIViewController {
     weak var delegate: CategorySelectionViewControllerDelegate?
     
     private let viewModel: CategorySelectionViewModel
-    private var tableViewHeightConstraint: NSLayoutConstraint?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -24,28 +23,15 @@ final class CategorySelectionViewController: UIViewController {
     }()
     
     private lazy var tableView: UITableView = {
-        let tableView = UITableView()
+        let tableView = UITableView(frame: .zero, style: .plain)
         tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
         tableView.backgroundColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
-                UIColor(white: 0.96, alpha: 1.0)
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
-        tableView.layer.cornerRadius = 16
-        tableView.clipsToBounds = true
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(white: 0.33, alpha: 1.0) : 
-                UIColor(white: 0.82, alpha: 1.0)
-        }
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorStyle = .none
         tableView.rowHeight = 75
-        tableView.estimatedRowHeight = 75
-        tableView.isScrollEnabled = true
-        tableView.allowsSelection = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -125,9 +111,10 @@ final class CategorySelectionViewController: UIViewController {
             titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -16),
             
             emptyStateImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
@@ -145,10 +132,6 @@ final class CategorySelectionViewController: UIViewController {
             addCategoryButton.heightAnchor.constraint(equalToConstant: 60)
         ])
         
-        // Устанавливаем динамическую высоту для таблицы
-        tableViewHeightConstraint = tableView.heightAnchor.constraint(equalToConstant: 0)
-        tableViewHeightConstraint?.isActive = true
-        updateTableViewHeight()
     }
     
     private func setupBindings() {
@@ -156,10 +139,6 @@ final class CategorySelectionViewController: UIViewController {
             DispatchQueue.main.async {
                 self?.updateEmptyState()
                 self?.tableView.reloadData()
-                // Небольшая задержка для корректного обновления layout после reloadData
-                DispatchQueue.main.async {
-                    self?.updateTableViewHeight()
-                }
             }
         }
         
@@ -185,7 +164,6 @@ final class CategorySelectionViewController: UIViewController {
             self?.updateEmptyState()
             self?.updateAddCategoryButton()
             self?.tableView.reloadData()
-            self?.updateTableViewHeight()
         }
     }
     
@@ -214,36 +192,10 @@ final class CategorySelectionViewController: UIViewController {
         }
     }
     
-    private func updateTableViewHeight() {
-        let numberOfRows = viewModel.numberOfRows()
-        guard numberOfRows > 0 else {
-            tableViewHeightConstraint?.constant = 0
-            view.setNeedsLayout()
-            return
-        }
-        
-        let rowHeight: CGFloat = 75
-        let totalHeight = CGFloat(numberOfRows) * rowHeight
-        
-        // Ограничиваем максимальную высоту для скролла
-        let maxHeight: CGFloat = 300
-        let finalHeight = min(totalHeight, maxHeight)
-        
-        tableViewHeightConstraint?.constant = finalHeight
-        tableView.isScrollEnabled = totalHeight > maxHeight
-        
-        // Обновляем layout асинхронно для избежания конфликтов
-        DispatchQueue.main.async { [weak self] in
-            self?.view.setNeedsLayout()
-            self?.view.layoutIfNeeded()
-        }
-    }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateEmptyState()
         updateAddCategoryButton()
-        updateTableViewHeight()
     }
     
     @objc private func addCategoryButtonTapped() {

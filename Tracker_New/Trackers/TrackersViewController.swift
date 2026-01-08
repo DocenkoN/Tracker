@@ -160,8 +160,8 @@ final class TrackersViewController: UIViewController {
     
     private func setupCollectionViewInsets() {
         // Добавляем contentInset снизу, чтобы ячейки могли прокручиваться выше кнопки "Фильтры"
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 66, right: 0)
-        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 66, right: 0)
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 82, right: 0)
+        collectionView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 82, right: 0)
     }
     
     private func setupStores() {
@@ -279,10 +279,10 @@ final class TrackersViewController: UIViewController {
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: filtersButton.topAnchor, constant: -16),
             
-            filtersButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 114),
-            filtersButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -114),
-            filtersButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            filtersButton.widthAnchor.constraint(equalToConstant: 114),
             filtersButton.heightAnchor.constraint(equalToConstant: 50),
+            filtersButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            filtersButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             
             emptyStateImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -545,8 +545,7 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         NSLayoutConstraint.activate([
             label.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 28),
-            label.topAnchor.constraint(equalTo: header.topAnchor, constant: 16),
-            label.bottomAnchor.constraint(equalTo: header.bottomAnchor, constant: -12)
+            label.topAnchor.constraint(equalTo: header.bottomAnchor, constant: -20)
         ])
         
         return header
@@ -693,15 +692,15 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
+        return 6
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: collectionView.bounds.width, height: 50)
+        return CGSize(width: collectionView.bounds.width, height: 38)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-        return UIEdgeInsets(top: 12, left: 16, bottom: 16, right: 16)
+        return UIEdgeInsets(top: 12, left: 16, bottom: 8, right: 16)
     }
 }
 
@@ -763,6 +762,9 @@ extension TrackersViewController: TrackerCellDelegate {
             CoreDataStack.shared.saveContext()
             
             collectionView.reloadData()
+            
+            // Отправляем уведомление для обновления статистики
+            NotificationCenter.default.post(name: NSNotification.Name("TrackerDidUpdate"), object: nil)
         } catch {
             print("Ошибка при работе с записью: \(error)")
         }
