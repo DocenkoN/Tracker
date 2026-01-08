@@ -70,8 +70,10 @@ final class TrackerRecordStore: NSObject {
     }
     
     func createRecord(trackerId: UUID, date: Date) throws -> TrackerRecordCoreData {
-        if let existingRecord = try? fetchRecord(trackerId: trackerId, date: date) {
-            return existingRecord
+        // Проверяем, не существует ли уже запись
+        if try fetchRecord(trackerId: trackerId, date: date) != nil {
+            // Запись уже существует, возвращаем существующую (как в референсе - просто игнорируем дубликат)
+            return try fetchRecord(trackerId: trackerId, date: date)!
         }
         
         let trackerRequest = TrackerCoreData.fetchRequest()
@@ -88,6 +90,11 @@ final class TrackerRecordStore: NSObject {
         try context.save()
         StatisticsService.shared.notifyUpdate()
         return recordCoreData
+    }
+    
+    // Добавляем метод addRecord как в референсе для совместимости
+    func addRecord(trackerId: UUID, date: Date) throws {
+        _ = try createRecord(trackerId: trackerId, date: date)
     }
     
     func fetchRecords() throws -> [TrackerRecordCoreData] {
@@ -142,12 +149,13 @@ final class TrackerRecordStore: NSObject {
     }
     
     func convertToRecord(_ recordCoreData: TrackerRecordCoreData) -> TrackerRecord? {
-        guard let id = recordCoreData.id,
+        guard let tracker = recordCoreData.tracker,
+              let trackerId = tracker.id,
               let date = recordCoreData.date else {
             return nil
         }
         
-        return TrackerRecord(id: id, date: date)
+        return TrackerRecord(trackerId: trackerId, date: date)
     }
     
     func convertToRecords(_ recordsCoreData: [TrackerRecordCoreData]) -> Set<TrackerRecord> {

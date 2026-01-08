@@ -7,11 +7,17 @@ protocol NewHabitViewControllerDelegate: AnyObject {
 final class NewHabitViewController: UIViewController {
     
     weak var delegate: NewHabitViewControllerDelegate?
+    var onCreateTracker: ((Tracker, String) -> Void)?
     private var selectedCategory: String?
     private var selectedSchedule: [WeekDay] = []
     private var selectedEmojiIndex: Int?
     private var selectedColorIndex: Int?
     var trackerType: TrackerType = .habit
+    
+    // Режим редактирования
+    private var isEditMode: Bool = false
+    private var editingTrackerId: UUID?
+    private var completedDaysCount: Int = 0
     
     enum TrackerType {
         case habit
@@ -337,6 +343,33 @@ final class NewHabitViewController: UIViewController {
         dismiss(animated: true)
     }
     
+    func configureForEditing(tracker: Tracker, categoryTitle: String, completedDaysCount: Int) {
+        isEditMode = true
+        editingTrackerId = tracker.id
+        self.completedDaysCount = completedDaysCount
+        
+        // Заполняем форму данными трекера
+        nameTextField.text = tracker.name
+        selectedCategory = categoryTitle
+        selectedSchedule = tracker.schedule
+        
+        // Находим индексы эмодзи и цвета
+        if let emojiIndex = emojis.firstIndex(of: tracker.emoji) {
+            selectedEmojiIndex = emojiIndex
+        }
+        if let colorIndex = colors.firstIndex(where: { $0.isEqual(tracker.color) }) {
+            selectedColorIndex = colorIndex
+        }
+        
+        // Обновляем UI
+        titleLabel.text = "Редактирование привычки"
+        createButton.setTitle("Сохранить", for: .normal)
+        optionsTableView.reloadData()
+        emojiCollectionView.reloadData()
+        colorCollectionView.reloadData()
+        updateCreateButtonState()
+    }
+    
     @objc private func createButtonTapped() {
         guard let name = nameTextField.text, !name.isEmpty,
               let category = selectedCategory,
@@ -347,15 +380,23 @@ final class NewHabitViewController: UIViewController {
         
         let schedule = trackerType == .irregularEvent ? [] : selectedSchedule
         
-        let newTracker = Tracker(
-            id: UUID(),
+        let trackerId = isEditMode ? (editingTrackerId ?? UUID()) : UUID()
+        
+        let tracker = Tracker(
+            id: trackerId,
             name: name,
             color: colors[colorIndex],
             emoji: emojis[emojiIndex],
             schedule: schedule
         )
         
-        delegate?.didCreateTracker(newTracker, category: category)
+        // Используем callback если есть, иначе delegate
+        if let onCreateTracker = onCreateTracker {
+            onCreateTracker(tracker, category)
+        } else {
+            delegate?.didCreateTracker(tracker, category: category)
+        }
+        
         dismiss(animated: true)
     }
     
@@ -550,8 +591,9 @@ final class EmojiCell: UICollectionViewCell {
         setupUI()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupUI() {
@@ -593,8 +635,9 @@ final class ColorCell: UICollectionViewCell {
         setupUI()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupUI() {

@@ -194,6 +194,14 @@ final class TrackersViewController: UIViewController {
         }
     }
     
+    private func isCompleted(id: UUID, date: Date) -> Bool {
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: date)
+        return completedTrackers.contains { record in
+            record.trackerId == id && calendar.isDate(record.date, inSameDayAs: normalizedDate)
+        }
+    }
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         hideDatePickerText()
@@ -420,14 +428,10 @@ final class TrackersViewController: UIViewController {
                         return true
                     case .completed:
                         // Завершенные трекеры на выбранную дату
-                        return completedTrackers.contains { record in
-                            record.id == tracker.id && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
-                        }
+                        return isCompleted(id: tracker.id, date: currentDate)
                     case .notCompleted:
                         // Не завершенные трекеры на выбранную дату
-                        return !completedTrackers.contains { record in
-                            record.id == tracker.id && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
-                        }
+                        return !isCompleted(id: tracker.id, date: currentDate)
                     }
                 }
                 
@@ -513,10 +517,13 @@ extension TrackersViewController: UICollectionViewDataSource {
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
         
-        let completedDays = completedTrackers.filter { $0.id == tracker.id }.count
+        let calendar = Calendar.current
+        let normalizedDate = calendar.startOfDay(for: currentDate)
+        
+        let completedDays = completedTrackers.filter { $0.trackerId == tracker.id }.count
         
         let isCompletedToday = completedTrackers.contains { record in
-            record.id == tracker.id && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
+            record.trackerId == tracker.id && calendar.isDate(record.date, inSameDayAs: normalizedDate)
         }
         
         let today = Calendar.current.startOfDay(for: Date())
@@ -590,7 +597,7 @@ extension TrackersViewController: UICollectionViewDelegate {
         print("Закрепить трекер: \(tracker.name)")
     }
     
-    private func editTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+    private func editTracker(_ tracker: Tracker) {
         // Аналитика: выбор редактирования в контекстном меню
         let parameters: [String: Any] = [
             "event": "click",
@@ -602,11 +609,32 @@ extension TrackersViewController: UICollectionViewDelegate {
         print("[Analytics] event: click, screen: Main, item: edit")
         #endif
         
-        // Заглушка для функциональности редактирования
-        print("Редактировать трекер: \(tracker.name)")
+        // Находим категорию трекера
+        var categoryTitle = ""
+        for category in categories {
+            if category.trackers.contains(where: { $0.id == tracker.id }) {
+                categoryTitle = category.title
+                break
+            }
+        }
+        
+        // Подсчитываем количество завершенных дней
+        let completedDaysCount = completedTrackers.filter { $0.trackerId == tracker.id }.count
+        
+        // Создаем экран редактирования
+        let newHabitVC = NewHabitViewController()
+        newHabitVC.configureForEditing(tracker: tracker, categoryTitle: categoryTitle, completedDaysCount: completedDaysCount)
+        
+        newHabitVC.onCreateTracker = { [weak self] updatedTracker, categoryTitle in
+            self?.updateTracker(updatedTracker, categoryTitle: categoryTitle)
+        }
+        
+        let navController = UINavigationController(rootViewController: newHabitVC)
+        navController.modalPresentationStyle = .pageSheet
+        present(navController, animated: true)
     }
     
-    private func deleteTracker(_ tracker: Tracker, at indexPath: IndexPath) {
+    private func confirmDeleteTracker(_ tracker: Tracker) {
         // Аналитика: выбор удаления в контекстном меню
         let parameters: [String: Any] = [
             "event": "click",
@@ -701,6 +729,34 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+extension TrackersViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        guard indexPath.section < visibleCategories.count,
+              indexPath.item < visibleCategories[indexPath.section].trackers.count else {
+            return nil
+        }
+        
+        let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
+        
+        return UIContextMenuConfiguration(identifier: indexPath as NSIndexPath, previewProvider: nil) { [weak self] _ in
+            let editAction = UIAction(
+                title: NSLocalizedString("Edit", comment: "Edit tracker")
+            ) { _ in
+                self?.editTracker(tracker)
+            }
+            
+            let deleteAction = UIAction(
+                title: NSLocalizedString("Delete", comment: "Delete tracker"),
+                attributes: .destructive
+            ) { _ in
+                self?.confirmDeleteTracker(tracker)
+            }
+            
+            return UIMenu(children: [editAction, deleteAction])
+        }
+    }
+}
+
 extension TrackersViewController: NewHabitViewControllerDelegate {
     func didCreateTracker(_ tracker: Tracker, category: String) {
         do {
@@ -714,6 +770,44 @@ extension TrackersViewController: NewHabitViewControllerDelegate {
             filterTrackers()
         } catch {
             print("Ошибка сохранения трекера: \(error)")
+        }
+    }
+    
+    private func updateTracker(_ tracker: Tracker, categoryTitle: String) {
+        do {
+            guard let trackerCoreData = try trackerStore.fetchTracker(by: tracker.id) else {
+                return
+            }
+            
+            // Получаем hex цвет
+            guard let colorHex = tracker.color.toHex() else {
+                return
+            }
+            
+            // Находим или создаем категорию
+            var categoryCoreData = try trackerCategoryStore.fetchCategory(title: categoryTitle)
+            if categoryCoreData == nil {
+                categoryCoreData = try trackerCategoryStore.createCategory(title: categoryTitle)
+            }
+            
+            guard let categoryCoreData = categoryCoreData else {
+                return
+            }
+            
+            // Обновляем данные трекера
+            trackerCoreData.name = tracker.name
+            trackerCoreData.emoji = tracker.emoji
+            trackerCoreData.color = colorHex
+            trackerCoreData.schedule = tracker.schedule.map { String($0.rawValue) }.joined(separator: ",")
+            trackerCoreData.category = categoryCoreData
+            
+            try trackerStore.updateTracker(trackerCoreData)
+            CoreDataStack.shared.saveContext()
+            
+            loadCategories()
+            filterTrackers()
+        } catch {
+            print("Ошибка обновления трекера: \(error)")
         }
     }
 }
@@ -731,36 +825,57 @@ extension TrackersViewController: TrackerCellDelegate {
         print("[Analytics] event: click, screen: Main, item: track")
         #endif
         
-        let today = Calendar.current.startOfDay(for: Date())
-        let selectedDate = Calendar.current.startOfDay(for: currentDate)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let normalizedDate = calendar.startOfDay(for: currentDate)
         
-        guard selectedDate <= today else {
+        guard normalizedDate <= today else {
             return
         }
         
-        let exists = completedTrackers.contains { record in
-            record.id == trackerId && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
-        }
+        // Проверяем через isCompleted метод (как в референсе)
+        let isCompleted = isCompleted(id: trackerId, date: currentDate)
         
         do {
-            if exists {
-                try trackerRecordStore.deleteRecord(trackerId: trackerId, date: currentDate)
-                if let recordToRemove = completedTrackers.first(where: { record in
-                    record.id == trackerId && Calendar.current.isDate(record.date, inSameDayAs: currentDate)
+            if isCompleted {
+                try trackerRecordStore.deleteRecord(trackerId: trackerId, date: normalizedDate)
+                
+                // Удаляем из Set в памяти (как в референсе)
+                if let recordToRemove = completedTrackers.first(where: { existingRecord in
+                    existingRecord.trackerId == trackerId && calendar.isDate(existingRecord.date, inSameDayAs: normalizedDate)
                 }) {
                     completedTrackers.remove(recordToRemove)
                 }
             } else {
-                _ = try trackerRecordStore.createRecord(trackerId: trackerId, date: currentDate)
-                let newRecord = TrackerRecord(id: trackerId, date: currentDate)
-                completedTrackers.insert(newRecord)
+                try trackerRecordStore.addRecord(trackerId: trackerId, date: normalizedDate)
+                // Добавляем в Set в памяти (как в референсе)
+                let record = TrackerRecord(trackerId: trackerId, date: normalizedDate)
+                completedTrackers.insert(record)
             }
             
-            CoreDataStack.shared.saveContext()
+            // Обновляем только конкретную ячейку (как в референсе)
+            // Ищем indexPath по trackerId в visibleCategories
+            var foundIndexPath: IndexPath?
+            for section in 0..<visibleCategories.count {
+                for row in 0..<visibleCategories[section].trackers.count {
+                    if visibleCategories[section].trackers[row].id == trackerId {
+                        foundIndexPath = IndexPath(row: row, section: section)
+                        break
+                    }
+                }
+                if foundIndexPath != nil { break }
+            }
             
-            collectionView.reloadData()
+            if let indexPath = foundIndexPath {
+                collectionView.reloadItems(at: [indexPath])
+            } else {
+                collectionView.reloadData()
+            }
         } catch {
             print("Ошибка при работе с записью: \(error)")
+            // Перезагружаем данные из CoreData в случае ошибки
+            loadCompletedTrackers()
+            collectionView.reloadData()
         }
     }
 }
@@ -769,6 +884,15 @@ extension TrackersViewController: TrackerStoreDelegate {
     func trackerStoreDidUpdate() {
         DispatchQueue.main.async { [weak self] in
             self?.loadCategories()
+            self?.filterTrackers()
+        }
+    }
+}
+
+extension TrackersViewController: TrackerRecordStoreDelegate {
+    func trackerRecordStoreDidUpdate() {
+        DispatchQueue.main.async { [weak self] in
+            self?.loadCompletedTrackers()
             self?.filterTrackers()
         }
     }

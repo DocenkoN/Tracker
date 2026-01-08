@@ -73,7 +73,7 @@ final class StatisticsCalculator {
         
         for (date, records) in recordsByDate {
             // Получаем уникальные ID трекеров, выполненных в этот день
-            let completedTrackerIds = Set(records.map { $0.id })
+            let completedTrackerIds = Set(records.map { $0.trackerId })
             
             // Проверяем, какие трекеры должны быть выполнены в этот день
             let calendar = Calendar.current

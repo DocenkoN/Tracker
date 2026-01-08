@@ -6,6 +6,18 @@ final class StatisticsViewController: UIViewController {
     private let trackerStore = TrackerStore()
     private let trackerRecordStore = TrackerRecordStore()
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        statisticsService.delegate = self
+        loadStatistics()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadStatistics()
+    }
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("Statistics", comment: "Statistics screen title")
