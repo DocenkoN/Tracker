@@ -6,18 +6,6 @@ final class StatisticsViewController: UIViewController {
     private let trackerStore = TrackerStore()
     private let trackerRecordStore = TrackerRecordStore()
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupUI()
-        statisticsService.delegate = self
-        loadStatistics()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        loadStatistics()
-    }
-    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("Statistics", comment: "Statistics screen title")
@@ -53,7 +41,7 @@ final class StatisticsViewController: UIViewController {
     
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Анализировать пока нечего"
+        label.text = NSLocalizedString("Nothing to analyze yet", comment: "Empty statistics state")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
@@ -73,6 +61,14 @@ final class StatisticsViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         loadStatistics()
+        // Убеждаемся, что delegate установлен при каждом появлении экрана
+        statisticsService.delegate = self
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        // Очищаем delegate при скрытии экрана, чтобы избежать утечек памяти
+        statisticsService.delegate = nil
     }
     
     private func setupNotifications() {
@@ -149,10 +145,10 @@ final class StatisticsViewController: UIViewController {
         emptyStateLabel.isHidden = hasData
         
         if hasData {
-            bestPeriodCard.configure(number: statistics.bestPeriod, description: "Лучший период")
-            idealDaysCard.configure(number: statistics.idealDays, description: "Идеальные дни")
-            completedTrackersCard.configure(number: statistics.completedTrackers, description: "Трекеров завершено")
-            averageValueCard.configure(number: Int(statistics.averageValue.rounded()), description: "Среднее значение")
+            bestPeriodCard.configure(number: statistics.bestPeriod, description: NSLocalizedString("Best period", comment: "Best period"))
+            idealDaysCard.configure(number: statistics.idealDays, description: NSLocalizedString("Ideal days", comment: "Ideal days"))
+            completedTrackersCard.configure(number: statistics.completedTrackers, description: NSLocalizedString("Trackers completed", comment: "Trackers completed"))
+            averageValueCard.configure(number: Int(statistics.averageValue.rounded()), description: NSLocalizedString("Average value", comment: "Average value"))
         }
     }
     

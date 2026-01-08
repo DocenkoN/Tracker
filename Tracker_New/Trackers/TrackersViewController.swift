@@ -74,7 +74,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var searchTextField: UISearchTextField = {
         let textField = UISearchTextField()
-        textField.placeholder = "Поиск"
+        textField.placeholder = NSLocalizedString("Search", comment: "Search placeholder")
         textField.translatesAutoresizingMaskIntoConstraints = false
         textField.delegate = self
         textField.addTarget(self, action: #selector(searchTextChanged), for: .editingChanged)
@@ -106,7 +106,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Что будем отслеживать?"
+        label.text = NSLocalizedString("What will we track?", comment: "Empty state label")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -127,7 +127,7 @@ final class TrackersViewController: UIViewController {
     
     private lazy var nothingFoundLabel: UILabel = {
         let label = UILabel()
-        label.text = "Ничего не найдено"
+        label.text = NSLocalizedString("Nothing found", comment: "Nothing found label")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -559,44 +559,7 @@ extension TrackersViewController: UICollectionViewDataSource {
     }
 }
 
-extension TrackersViewController: UICollectionViewDelegate {
-    
-    func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
-        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
-            guard let self = self else { return UIMenu(title: "", children: []) }
-            let tracker = self.visibleCategories[indexPath.section].trackers[indexPath.item]
-            
-            let pinAction = UIAction(
-                title: "Закрепить",
-                image: UIImage(systemName: "pin")
-            ) { _ in
-                self.pinTracker(tracker, at: indexPath)
-            }
-            
-            let editAction = UIAction(
-                title: "Редактировать",
-                image: UIImage(systemName: "pencil")
-            ) { _ in
-                self.editTracker(tracker, at: indexPath)
-            }
-            
-            let deleteAction = UIAction(
-                title: "Удалить",
-                image: UIImage(systemName: "trash"),
-                attributes: .destructive
-            ) { _ in
-                self.deleteTracker(tracker, at: indexPath)
-            }
-            
-            return UIMenu(title: "", children: [pinAction, editAction, deleteAction])
-        }
-    }
-    
-    private func pinTracker(_ tracker: Tracker, at indexPath: IndexPath) {
-        // Заглушка для функциональности закрепления (дополнительная задача)
-        print("Закрепить трекер: \(tracker.name)")
-    }
-    
+extension TrackersViewController {
     private func editTracker(_ tracker: Tracker) {
         // Аналитика: выбор редактирования в контекстном меню
         let parameters: [String: Any] = [
@@ -649,22 +612,35 @@ extension TrackersViewController: UICollectionViewDelegate {
         // Показываем подтверждение удаления
         let alert = UIAlertController(
             title: nil,
-            message: "Уверены, что хотите удалить трекер?",
+            message: NSLocalizedString("Are you sure you want to delete tracker?", comment: "Delete confirmation"),
             preferredStyle: .actionSheet
         )
         
-        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+        let deleteAction = UIAlertAction(title: NSLocalizedString("Delete", comment: "Delete action"), style: .destructive) { [weak self] _ in
             self?.performDeleteTracker(tracker)
         }
         
-        let cancelAction = UIAlertAction(title: "Отмена", style: .cancel)
+        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel action"), style: .cancel)
         
         alert.addAction(deleteAction)
         alert.addAction(cancelAction)
         
         // Для iPad нужно указать sourceView
         if let popover = alert.popoverPresentationController {
-            if let cell = collectionView.cellForItem(at: indexPath) {
+            // Ищем ячейку по tracker ID
+            var foundCell: UICollectionViewCell?
+            for section in 0..<visibleCategories.count {
+                for item in 0..<visibleCategories[section].trackers.count {
+                    if visibleCategories[section].trackers[item].id == tracker.id {
+                        let indexPath = IndexPath(item: item, section: section)
+                        foundCell = collectionView.cellForItem(at: indexPath)
+                        break
+                    }
+                }
+                if foundCell != nil { break }
+            }
+            
+            if let cell = foundCell {
                 popover.sourceView = cell
                 popover.sourceRect = cell.bounds
             } else {
@@ -696,12 +672,13 @@ extension TrackersViewController: UICollectionViewDelegate {
             print("Ошибка удаления трекера: \(error)")
             
             // Показываем ошибку пользователю
+            let errorMessage = String(format: NSLocalizedString("Failed to delete tracker", comment: "Delete error"), error.localizedDescription)
             let errorAlert = UIAlertController(
-                title: "Ошибка",
-                message: "Не удалось удалить трекер: \(error.localizedDescription)",
+                title: NSLocalizedString("Error", comment: "Error title"),
+                message: errorMessage,
                 preferredStyle: .alert
             )
-            errorAlert.addAction(UIAlertAction(title: "OK", style: .default))
+            errorAlert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: .default))
             present(errorAlert, animated: true)
         }
     }
@@ -785,7 +762,7 @@ extension TrackersViewController: NewHabitViewControllerDelegate {
             }
             
             // Находим или создаем категорию
-            var categoryCoreData = try trackerCategoryStore.fetchCategory(title: categoryTitle)
+            var categoryCoreData = try trackerCategoryStore.fetchCategory(by: categoryTitle)
             if categoryCoreData == nil {
                 categoryCoreData = try trackerCategoryStore.createCategory(title: categoryTitle)
             }
@@ -801,7 +778,7 @@ extension TrackersViewController: NewHabitViewControllerDelegate {
             trackerCoreData.schedule = tracker.schedule.map { String($0.rawValue) }.joined(separator: ",")
             trackerCoreData.category = categoryCoreData
             
-            try trackerStore.updateTracker(trackerCoreData)
+            try trackerStore.updateTracker(trackerCoreData, with: tracker)
             CoreDataStack.shared.saveContext()
             
             loadCategories()
@@ -903,15 +880,6 @@ extension TrackersViewController: TrackerCategoryStoreDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.loadCategories()
             self?.filterTrackers()
-        }
-    }
-}
-
-extension TrackersViewController: TrackerRecordStoreDelegate {
-    func trackerRecordStoreDidUpdate() {
-        DispatchQueue.main.async { [weak self] in
-            self?.loadCompletedTrackers()
-            self?.collectionView.reloadData()
         }
     }
 }

@@ -10,13 +10,13 @@ final class ScheduleViewController: UIViewController {
     private var selectedDays: Set<WeekDay> = []
     
     private let weekDays: [(day: WeekDay, name: String)] = [
-        (.monday, "Понедельник"),
-        (.tuesday, "Вторник"),
-        (.wednesday, "Среда"),
-        (.thursday, "Четверг"),
-        (.friday, "Пятница"),
-        (.saturday, "Суббота"),
-        (.sunday, "Воскресенье")
+        (.monday, NSLocalizedString("Monday", comment: "Monday")),
+        (.tuesday, NSLocalizedString("Tuesday", comment: "Tuesday")),
+        (.wednesday, NSLocalizedString("Wednesday", comment: "Wednesday")),
+        (.thursday, NSLocalizedString("Thursday", comment: "Thursday")),
+        (.friday, NSLocalizedString("Friday", comment: "Friday")),
+        (.saturday, NSLocalizedString("Saturday", comment: "Saturday")),
+        (.sunday, NSLocalizedString("Sunday", comment: "Sunday"))
     ]
     
     private lazy var tableView: UITableView = {
@@ -35,7 +35,7 @@ final class ScheduleViewController: UIViewController {
     
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(NSLocalizedString("Done", comment: "Done button"), for: .normal)
         button.setTitleColor(UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }, for: .normal)
@@ -59,7 +59,7 @@ final class ScheduleViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         
-        navigationItem.title = "Расписание"
+        navigationItem.title = NSLocalizedString("Schedule", comment: "Schedule screen title")
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor { traitCollection in
                 traitCollection.userInterfaceStyle == .dark ? .white : .black

@@ -26,7 +26,7 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая привычка"
+        label.text = NSLocalizedString("New habit", comment: "New habit title")
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -38,7 +38,8 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var nameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
+        let placeholderText = NSLocalizedString("Enter tracker name", comment: "Tracker name placeholder")
+        textField.placeholder = placeholderText
         textField.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? 
                 UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
@@ -48,7 +49,7 @@ final class NewHabitViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .white : .black
         }
         textField.attributedPlaceholder = NSAttributedString(
-            string: "Введите название трекера",
+            string: placeholderText,
             attributes: [NSAttributedString.Key.foregroundColor: UIColor { traitCollection in
                 traitCollection.userInterfaceStyle == .dark ? 
                     UIColor(white: 0.56, alpha: 1.0) : 
@@ -91,7 +92,7 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle(NSLocalizedString("Cancel", comment: "Cancel button"), for: .normal)
         button.setTitleColor(UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? 
                 UIColor(red: 245/255, green: 107/255, blue: 108/255, alpha: 1.0) : .red
@@ -110,7 +111,7 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var createButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Создать", for: .normal)
+        button.setTitle(NSLocalizedString("Create", comment: "Create button"), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .systemGray
@@ -123,7 +124,7 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var emojiLabel: UILabel = {
         let label = UILabel()
-        label.text = "Emoji"
+        label.text = NSLocalizedString("Emoji", comment: "Emoji label")
         label.font = .systemFont(ofSize: 19, weight: .bold)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -149,7 +150,7 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var colorLabel: UILabel = {
         let label = UILabel()
-        label.text = "Цвет"
+        label.text = NSLocalizedString("Color", comment: "Color label")
         label.font = .systemFont(ofSize: 19, weight: .bold)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -188,7 +189,10 @@ final class NewHabitViewController: UIViewController {
     
     private var tableViewHeightConstraint: NSLayoutConstraint?
     
-    private let options = ["Категория", "Расписание"]
+    private let options = [
+        NSLocalizedString("Category", comment: "Category option"),
+        NSLocalizedString("Schedule", comment: "Schedule option")
+    ]
     
     private let emojis = ["😊", "😻", "🌺", "🐶", "😇", "😠", "🥶", "🤔", "🥦", "🏓", "🥇", "🎸", "🙌", "🍔", "🏝️", "😴", "❤️", "😮"]
     
@@ -348,6 +352,9 @@ final class NewHabitViewController: UIViewController {
         editingTrackerId = tracker.id
         self.completedDaysCount = completedDaysCount
         
+        // Определяем тип трекера
+        trackerType = tracker.schedule.isEmpty ? .irregularEvent : .habit
+        
         // Заполняем форму данными трекера
         nameTextField.text = tracker.name
         selectedCategory = categoryTitle
@@ -362,12 +369,16 @@ final class NewHabitViewController: UIViewController {
         }
         
         // Обновляем UI
-        titleLabel.text = "Редактирование привычки"
-        createButton.setTitle("Сохранить", for: .normal)
-        optionsTableView.reloadData()
-        emojiCollectionView.reloadData()
-        colorCollectionView.reloadData()
-        updateCreateButtonState()
+        titleLabel.text = NSLocalizedString("Edit habit", comment: "Edit habit title")
+        createButton.setTitle(NSLocalizedString("Save", comment: "Save button"), for: .normal)
+        
+        // Обновляем UI после того, как все данные установлены
+        DispatchQueue.main.async { [weak self] in
+            self?.optionsTableView.reloadData()
+            self?.emojiCollectionView.reloadData()
+            self?.colorCollectionView.reloadData()
+            self?.updateCreateButtonState()
+        }
     }
     
     @objc private func createButtonTapped() {
@@ -469,7 +480,7 @@ extension NewHabitViewController: UITableViewDataSource {
     
     private func formatSchedule(_ schedule: [WeekDay]) -> String {
         if schedule.count == 7 {
-            return "Каждый день"
+            return NSLocalizedString("Every day", comment: "Every day")
         }
         let weekDayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
         return schedule.sorted(by: { $0.rawValue < $1.rawValue })

@@ -9,6 +9,9 @@
 "Trackers" = "Трекеры";
 "Statistics" = "Статистика";
 "Filters" = "Фильтры";
+"Search" = "Поиск";
+"What will we track?" = "Что будем отслеживать?";
+"Nothing found" = "Ничего не найдено";
 
 // Days
 "day" = "день";
@@ -21,3 +24,57 @@
 "Completed" = "Завершенные";
 "Not completed" = "Не завершенные";
 
+// Tracker Creation
+"New habit" = "Новая привычка";
+"Edit habit" = "Редактирование привычки";
+"Enter tracker name" = "Введите название трекера";
+"Category" = "Категория";
+"Schedule" = "Расписание";
+"Emoji" = "Эмодзи";
+"Color" = "Цвет";
+"Cancel" = "Отменить";
+"Create" = "Создать";
+"Save" = "Сохранить";
+"Done" = "Готово";
+"Every day" = "Каждый день";
+
+// Category
+"New category" = "Новая категория";
+"Edit category" = "Редактирование категории";
+"Enter category name" = "Введите название категории";
+"Add category" = "Добавить категорию";
+"Habits and events can be grouped by meaning" = "Привычки и события можно\nобъединить по смыслу";
+
+// Schedule
+"Monday" = "Понедельник";
+"Tuesday" = "Вторник";
+"Wednesday" = "Среда";
+"Thursday" = "Четверг";
+"Friday" = "Пятница";
+"Saturday" = "Суббота";
+"Sunday" = "Воскресенье";
+
+// Context Menu
+"Edit" = "Редактировать";
+"Delete" = "Удалить";
+
+// Alerts
+"Are you sure you want to delete tracker?" = "Уверены, что хотите удалить трекер?";
+"Delete" = "Удалить";
+"Cancel" = "Отмена";
+"Error" = "Ошибка";
+"Failed to delete tracker" = "Не удалось удалить трекер: %@";
+"OK" = "OK";
+"Are you sure you don't need this category?" = "Эта категория точно не нужна?";
+
+// Statistics
+"Nothing to analyze yet" = "Анализировать пока нечего";
+"Best period" = "Лучший период";
+"Ideal days" = "Идеальные дни";
+"Trackers completed" = "Трекеров завершено";
+"Average value" = "Среднее значение";
+
+// Onboarding
+"This is technology!" = "Вот это технологии!";
+"Track only what you want" = "Отслеживайте только\nто, что хотите";
+"Even if it's not liters of water and yoga" = "Даже если это\nне литры воды и йога";

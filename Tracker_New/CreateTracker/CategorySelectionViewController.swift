@@ -26,7 +26,7 @@ final class CategorySelectionViewController: UIViewController {
     
     private lazy var addCategoryButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Добавить категорию", for: .normal)
+        button.setTitle(NSLocalizedString("Add category", comment: "Add category button"), for: .normal)
         button.setTitleColor(UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }, for: .normal)
@@ -51,7 +51,7 @@ final class CategorySelectionViewController: UIViewController {
     
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно\nобъединить по смыслу"
+        label.text = NSLocalizedString("Habits and events can be grouped by meaning", comment: "Empty state message")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
@@ -90,7 +90,7 @@ final class CategorySelectionViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         
-        navigationItem.title = "Категория"
+        navigationItem.title = NSLocalizedString("Category", comment: "Category screen title")
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor { traitCollection in
                 traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -146,8 +146,8 @@ final class CategorySelectionViewController: UIViewController {
         viewModel.errorBinding = { [weak self] errorMessage in
             guard let errorMessage = errorMessage else { return }
             DispatchQueue.main.async {
-                let alert = UIAlertController(title: "Ошибка", message: errorMessage, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                let alert = UIAlertController(title: NSLocalizedString("Error", comment: "Error title"), message: errorMessage, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: .default))
                 self?.present(alert, animated: true)
             }
         }
@@ -265,14 +265,14 @@ extension CategorySelectionViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
             let editAction = UIAction(
-                title: "Редактировать",
+                title: NSLocalizedString("Edit", comment: "Edit category"),
                 image: UIImage(systemName: "pencil")
             ) { _ in
                 self?.editCategory(at: indexPath)
             }
             
             let deleteAction = UIAction(
-                title: "Удалить",
+                title: NSLocalizedString("Delete", comment: "Delete category"),
                 image: UIImage(systemName: "trash"),
                 attributes: .destructive
             ) { _ in
@@ -296,16 +296,16 @@ extension CategorySelectionViewController: UITableViewDelegate {
     
     private func showDeleteConfirmation(for indexPath: IndexPath) {
         let alert = UIAlertController(
-            title: "Эта категория точно не нужна?",
+            title: NSLocalizedString("Are you sure you don't need this category?", comment: "Delete category confirmation"),
             message: nil,
             preferredStyle: .actionSheet
         )
         
-        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+        let deleteAction = UIAlertAction(title: NSLocalizedString("Delete", comment: "Delete action"), style: .destructive) { [weak self] _ in
             self?.viewModel.deleteCategory(at: indexPath)
         }
         
-        let cancelAction = UIAlertAction(title: "Отменить", style: .cancel)
+        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel action"), style: .cancel)
         
         alert.addAction(deleteAction)
         alert.addAction(cancelAction)

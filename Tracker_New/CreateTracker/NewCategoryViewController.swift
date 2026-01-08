@@ -13,7 +13,7 @@ final class NewCategoryViewController: UIViewController {
     
     private lazy var categoryTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название категории"
+        textField.placeholder = NSLocalizedString("Enter category name", comment: "Category name placeholder")
         textField.font = .systemFont(ofSize: 17, weight: .regular)
         textField.textColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .white : .black
@@ -41,7 +41,7 @@ final class NewCategoryViewController: UIViewController {
     
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(NSLocalizedString("Done", comment: "Done button"), for: .normal)
         button.setTitleColor(UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }, for: .normal)
@@ -90,7 +90,7 @@ final class NewCategoryViewController: UIViewController {
             traitCollection.userInterfaceStyle == .dark ? .black : .white
         }
         
-        let title = editingIndexPath != nil ? "Редактирование категории" : "Новая категория"
+        let title = editingIndexPath != nil ? NSLocalizedString("Edit category", comment: "Edit category title") : NSLocalizedString("New category", comment: "New category title")
         navigationItem.title = title
         navigationController?.navigationBar.titleTextAttributes = [
             .foregroundColor: UIColor { traitCollection in
