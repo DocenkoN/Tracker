@@ -9,8 +9,9 @@ final class OnboardingPageViewController: UIPageViewController {
         super.init(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private lazy var pageControl: UIPageControl = {
@@ -25,7 +26,7 @@ final class OnboardingPageViewController: UIPageViewController {
     
     private lazy var nextButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Вот это технологии!", for: .normal)
+        button.setTitle(NSLocalizedString("This is technology!", comment: "Onboarding button"), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)

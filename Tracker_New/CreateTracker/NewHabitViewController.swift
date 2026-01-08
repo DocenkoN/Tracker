@@ -7,11 +7,17 @@ protocol NewHabitViewControllerDelegate: AnyObject {
 final class NewHabitViewController: UIViewController {
     
     weak var delegate: NewHabitViewControllerDelegate?
+    var onCreateTracker: ((Tracker, String) -> Void)?
     private var selectedCategory: String?
     private var selectedSchedule: [WeekDay] = []
     private var selectedEmojiIndex: Int?
     private var selectedColorIndex: Int?
     var trackerType: TrackerType = .habit
+    
+    // Режим редактирования
+    private var isEditMode: Bool = false
+    private var editingTrackerId: UUID?
+    private var completedDaysCount: Int = 0
     
     enum TrackerType {
         case habit
@@ -20,9 +26,11 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая привычка"
+        label.text = NSLocalizedString("New habit", comment: "New habit title")
         label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -30,8 +38,24 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var nameTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название трекера"
-        textField.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        let placeholderText = NSLocalizedString("Enter tracker name", comment: "Tracker name placeholder")
+        textField.placeholder = placeholderText
+        textField.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
+        textField.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
+        textField.attributedPlaceholder = NSAttributedString(
+            string: placeholderText,
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.56, alpha: 1.0) : 
+                    UIColor(white: 0.56, alpha: 1.0)
+            }]
+        )
         textField.layer.cornerRadius = 16
         textField.font = .systemFont(ofSize: 17)
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -47,12 +71,20 @@ final class NewHabitViewController: UIViewController {
         let tableView = UITableView()
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+        tableView.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(white: 0.96, alpha: 1.0)
+        }
         tableView.layer.cornerRadius = 16
         tableView.clipsToBounds = true
         tableView.isScrollEnabled = false
         tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
+        tableView.separatorColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(white: 0.33, alpha: 1.0) : 
+                UIColor(white: 0.82, alpha: 1.0)
+        }
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -60,11 +92,16 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Отменить", for: .normal)
-        button.setTitleColor(.red, for: .normal)
+        button.setTitle(NSLocalizedString("Cancel", comment: "Cancel button"), for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 245/255, green: 107/255, blue: 108/255, alpha: 1.0) : .red
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .white
-        button.layer.borderColor = UIColor.red.cgColor
+        button.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                .clear : .white
+        }
         button.layer.borderWidth = 1
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -74,7 +111,7 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var createButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Создать", for: .normal)
+        button.setTitle(NSLocalizedString("Create", comment: "Create button"), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .systemGray
@@ -87,9 +124,11 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var emojiLabel: UILabel = {
         let label = UILabel()
-        label.text = "Emoji"
+        label.text = NSLocalizedString("Emoji", comment: "Emoji label")
         label.font = .systemFont(ofSize: 19, weight: .bold)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -111,9 +150,11 @@ final class NewHabitViewController: UIViewController {
     
     private lazy var colorLabel: UILabel = {
         let label = UILabel()
-        label.text = "Цвет"
+        label.text = NSLocalizedString("Color", comment: "Color label")
         label.font = .systemFont(ofSize: 19, weight: .bold)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -148,7 +189,10 @@ final class NewHabitViewController: UIViewController {
     
     private var tableViewHeightConstraint: NSLayoutConstraint?
     
-    private let options = ["Категория", "Расписание"]
+    private let options = [
+        NSLocalizedString("Category", comment: "Category option"),
+        NSLocalizedString("Schedule", comment: "Schedule option")
+    ]
     
     private let emojis = ["😊", "😻", "🌺", "🐶", "😇", "😠", "🥶", "🤔", "🥦", "🏓", "🥇", "🎸", "🙌", "🍔", "🏝️", "😴", "❤️", "😮"]
     
@@ -178,6 +222,26 @@ final class NewHabitViewController: UIViewController {
         setupUI()
         nameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         updateTableViewHeight()
+        updateCancelButtonBorder()
+    }
+    
+    // Deprecated in iOS 17.0, but kept for compatibility with older iOS versions
+    // Dynamic colors update automatically in iOS 17+
+    @available(iOS, deprecated: 17.0, message: "Dynamic colors update automatically in iOS 17+")
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if traitCollection.userInterfaceStyle != previousTraitCollection?.userInterfaceStyle {
+            updateCancelButtonBorder()
+        }
+    }
+    
+    private func updateCancelButtonBorder() {
+        let borderColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 245/255, green: 107/255, blue: 108/255, alpha: 1.0) : 
+                .red
+        }
+        cancelButton.layer.borderColor = borderColor.cgColor
     }
     
     private func updateCreateButtonState() {
@@ -190,11 +254,23 @@ final class NewHabitViewController: UIViewController {
         let isValid = isNameValid && isCategorySelected && isScheduleSelected && isEmojiSelected && isColorSelected
         
         createButton.isEnabled = isValid
-        createButton.backgroundColor = isValid ? .black : .systemGray
+        if isValid {
+            createButton.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            }
+            createButton.setTitleColor(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .black : .white
+            }, for: .normal)
+        } else {
+            createButton.backgroundColor = .systemGray
+            createButton.setTitleColor(.white, for: .normal)
+        }
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -255,20 +331,54 @@ final class NewHabitViewController: UIViewController {
             colorCollectionView.heightAnchor.constraint(equalToConstant: 156),
             colorCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
             
-            cancelButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            cancelButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
-            cancelButton.trailingAnchor.constraint(equalTo: view.centerXAnchor, constant: -4),
+            cancelButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            cancelButton.trailingAnchor.constraint(equalTo: createButton.leadingAnchor, constant: -8),
+            cancelButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            cancelButton.widthAnchor.constraint(equalTo: createButton.widthAnchor),
             
-            createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            createButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             createButton.heightAnchor.constraint(equalToConstant: 60),
-            createButton.leadingAnchor.constraint(equalTo: view.centerXAnchor, constant: 4)
+            createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            createButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
         ])
     }
     
     @objc private func cancelButtonTapped() {
         dismiss(animated: true)
+    }
+    
+    func configureForEditing(tracker: Tracker, categoryTitle: String, completedDaysCount: Int) {
+        isEditMode = true
+        editingTrackerId = tracker.id
+        self.completedDaysCount = completedDaysCount
+        
+        // Определяем тип трекера
+        trackerType = tracker.schedule.isEmpty ? .irregularEvent : .habit
+        
+        // Заполняем форму данными трекера
+        nameTextField.text = tracker.name
+        selectedCategory = categoryTitle
+        selectedSchedule = tracker.schedule
+        
+        // Находим индексы эмодзи и цвета
+        if let emojiIndex = emojis.firstIndex(of: tracker.emoji) {
+            selectedEmojiIndex = emojiIndex
+        }
+        if let colorIndex = colors.firstIndex(where: { $0.isEqual(tracker.color) }) {
+            selectedColorIndex = colorIndex
+        }
+        
+        // Обновляем UI
+        titleLabel.text = NSLocalizedString("Edit habit", comment: "Edit habit title")
+        createButton.setTitle(NSLocalizedString("Save", comment: "Save button"), for: .normal)
+        
+        // Обновляем UI после того, как все данные установлены
+        DispatchQueue.main.async { [weak self] in
+            self?.optionsTableView.reloadData()
+            self?.emojiCollectionView.reloadData()
+            self?.colorCollectionView.reloadData()
+            self?.updateCreateButtonState()
+        }
     }
     
     @objc private func createButtonTapped() {
@@ -281,15 +391,23 @@ final class NewHabitViewController: UIViewController {
         
         let schedule = trackerType == .irregularEvent ? [] : selectedSchedule
         
-        let newTracker = Tracker(
-            id: UUID(),
+        let trackerId = isEditMode ? (editingTrackerId ?? UUID()) : UUID()
+        
+        let tracker = Tracker(
+            id: trackerId,
             name: name,
             color: colors[colorIndex],
             emoji: emojis[emojiIndex],
             schedule: schedule
         )
         
-        delegate?.didCreateTracker(newTracker, category: category)
+        // Используем callback если есть, иначе delegate
+        if let onCreateTracker = onCreateTracker {
+            onCreateTracker(tracker, category)
+        } else {
+            delegate?.didCreateTracker(tracker, category: category)
+        }
+        
         dismiss(animated: true)
     }
     
@@ -325,6 +443,9 @@ extension NewHabitViewController: UITableViewDataSource {
         let cell = UITableViewCell(style: .subtitle, reuseIdentifier: "OptionCell")
         
         cell.textLabel?.text = options[indexPath.row]
+        cell.textLabel?.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         cell.accessoryType = .disclosureIndicator
         cell.backgroundColor = .clear
         cell.selectionStyle = .none
@@ -338,12 +459,18 @@ extension NewHabitViewController: UITableViewDataSource {
         
         if indexPath.row == 0 {
             cell.detailTextLabel?.text = selectedCategory
-            cell.detailTextLabel?.textColor = .gray
+            cell.detailTextLabel?.textColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.56, alpha: 1.0) : .gray
+            }
             cell.detailTextLabel?.font = .systemFont(ofSize: 14)
         } else if indexPath.row == 1 {
             if !selectedSchedule.isEmpty {
                 cell.detailTextLabel?.text = formatSchedule(selectedSchedule)
-                cell.detailTextLabel?.textColor = .gray
+                cell.detailTextLabel?.textColor = UIColor { traitCollection in
+                    traitCollection.userInterfaceStyle == .dark ? 
+                        UIColor(white: 0.56, alpha: 1.0) : .gray
+                }
                 cell.detailTextLabel?.font = .systemFont(ofSize: 14)
             }
         }
@@ -353,7 +480,7 @@ extension NewHabitViewController: UITableViewDataSource {
     
     private func formatSchedule(_ schedule: [WeekDay]) -> String {
         if schedule.count == 7 {
-            return "Каждый день"
+            return NSLocalizedString("Every day", comment: "Every day")
         }
         let weekDayNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
         return schedule.sorted(by: { $0.rawValue < $1.rawValue })
@@ -475,8 +602,9 @@ final class EmojiCell: UICollectionViewCell {
         setupUI()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupUI() {
@@ -490,7 +618,11 @@ final class EmojiCell: UICollectionViewCell {
     func configure(with emoji: String, isSelected: Bool) {
         emojiLabel.text = emoji
         if isSelected {
-            contentView.backgroundColor = UIColor(white: 0.9, alpha: 1.0)
+            contentView.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? 
+                    UIColor(white: 0.33, alpha: 1.0) : 
+                    UIColor(white: 0.9, alpha: 1.0)
+            }
             contentView.layer.cornerRadius = 16
             contentView.layer.borderWidth = 0
         } else {
@@ -514,8 +646,9 @@ final class ColorCell: UICollectionViewCell {
         setupUI()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupUI() {

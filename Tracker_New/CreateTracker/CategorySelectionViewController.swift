@@ -9,43 +9,31 @@ final class CategorySelectionViewController: UIViewController {
     weak var delegate: CategorySelectionViewControllerDelegate?
     
     private let viewModel: CategorySelectionViewModel
-    private var tableViewHeightConstraint: NSLayoutConstraint?
-    
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Категория"
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
     
     private lazy var tableView: UITableView = {
-        let tableView = UITableView()
+        let tableView = UITableView(frame: .zero, style: .plain)
         tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
-        tableView.layer.cornerRadius = 16
-        tableView.clipsToBounds = true
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = UIColor(white: 0.82, alpha: 1.0)
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
+        tableView.separatorStyle = .none
         tableView.rowHeight = 75
-        tableView.estimatedRowHeight = 75
-        tableView.isScrollEnabled = true
-        tableView.allowsSelection = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
     
     private lazy var addCategoryButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Добавить категорию", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitle(NSLocalizedString("Add category", comment: "Add category button"), for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = .black
+        button.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(addCategoryButtonTapped), for: .touchUpInside)
@@ -63,9 +51,11 @@ final class CategorySelectionViewController: UIViewController {
     
     private lazy var emptyStateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно\nобъединить по смыслу"
+        label.text = NSLocalizedString("Habits and events can be grouped by meaning", comment: "Empty state message")
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        }
         label.textAlignment = .center
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -83,8 +73,9 @@ final class CategorySelectionViewController: UIViewController {
         setupBindings()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     override func viewDidLoad() {
@@ -95,21 +86,29 @@ final class CategorySelectionViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
-        view.addSubview(titleLabel)
+        navigationItem.title = NSLocalizedString("Category", comment: "Category screen title")
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            },
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
+        ]
+        navigationItem.hidesBackButton = true
+        
         view.addSubview(tableView)
         view.addSubview(emptyStateImageView)
         view.addSubview(emptyStateLabel)
         view.addSubview(addCategoryButton)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            tableView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -16),
             
             emptyStateImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
@@ -127,10 +126,6 @@ final class CategorySelectionViewController: UIViewController {
             addCategoryButton.heightAnchor.constraint(equalToConstant: 60)
         ])
         
-        // Устанавливаем динамическую высоту для таблицы
-        tableViewHeightConstraint = tableView.heightAnchor.constraint(equalToConstant: 0)
-        tableViewHeightConstraint?.isActive = true
-        updateTableViewHeight()
     }
     
     private func setupBindings() {
@@ -138,10 +133,6 @@ final class CategorySelectionViewController: UIViewController {
             DispatchQueue.main.async {
                 self?.updateEmptyState()
                 self?.tableView.reloadData()
-                // Небольшая задержка для корректного обновления layout после reloadData
-                DispatchQueue.main.async {
-                    self?.updateTableViewHeight()
-                }
             }
         }
         
@@ -155,8 +146,8 @@ final class CategorySelectionViewController: UIViewController {
         viewModel.errorBinding = { [weak self] errorMessage in
             guard let errorMessage = errorMessage else { return }
             DispatchQueue.main.async {
-                let alert = UIAlertController(title: "Ошибка", message: errorMessage, preferredStyle: .alert)
-                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                let alert = UIAlertController(title: NSLocalizedString("Error", comment: "Error title"), message: errorMessage, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: "OK button"), style: .default))
                 self?.present(alert, animated: true)
             }
         }
@@ -167,7 +158,6 @@ final class CategorySelectionViewController: UIViewController {
             self?.updateEmptyState()
             self?.updateAddCategoryButton()
             self?.tableView.reloadData()
-            self?.updateTableViewHeight()
         }
     }
     
@@ -185,39 +175,14 @@ final class CategorySelectionViewController: UIViewController {
     }
     
     private func updateAddCategoryButton() {
-        let hasSelectedCategory = viewModel.selectedCategory != nil
-        
+        // По макету кнопка всегда белая в темной теме, независимо от выбора категории
         UIView.animate(withDuration: 0.2) {
-            if hasSelectedCategory {
-                self.addCategoryButton.backgroundColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
-            } else {
-                self.addCategoryButton.backgroundColor = .black
+            self.addCategoryButton.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
             }
-        }
-    }
-    
-    private func updateTableViewHeight() {
-        let numberOfRows = viewModel.numberOfRows()
-        guard numberOfRows > 0 else {
-            tableViewHeightConstraint?.constant = 0
-            view.setNeedsLayout()
-            return
-        }
-        
-        let rowHeight: CGFloat = 75
-        let totalHeight = CGFloat(numberOfRows) * rowHeight
-        
-        // Ограничиваем максимальную высоту для скролла
-        let maxHeight: CGFloat = 300
-        let finalHeight = min(totalHeight, maxHeight)
-        
-        tableViewHeightConstraint?.constant = finalHeight
-        tableView.isScrollEnabled = totalHeight > maxHeight
-        
-        // Обновляем layout асинхронно для избежания конфликтов
-        DispatchQueue.main.async { [weak self] in
-            self?.view.setNeedsLayout()
-            self?.view.layoutIfNeeded()
+            self.addCategoryButton.setTitleColor(UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .black : .white
+            }, for: .normal)
         }
     }
     
@@ -225,7 +190,6 @@ final class CategorySelectionViewController: UIViewController {
         super.viewWillAppear(animated)
         updateEmptyState()
         updateAddCategoryButton()
-        updateTableViewHeight()
     }
     
     @objc private func addCategoryButtonTapped() {
@@ -254,7 +218,11 @@ extension CategorySelectionViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
-        cell.configure(with: cellModel)
+        let numberOfRows = viewModel.numberOfRows()
+        let isFirst = indexPath.row == 0
+        let isLast = indexPath.row == numberOfRows - 1
+        
+        cell.configure(title: cellModel.title, isSelected: cellModel.isSelected, isFirst: isFirst, isLast: isLast)
         
         return cell
     }
@@ -297,14 +265,14 @@ extension CategorySelectionViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { [weak self] _ in
             let editAction = UIAction(
-                title: "Редактировать",
+                title: NSLocalizedString("Edit", comment: "Edit category"),
                 image: UIImage(systemName: "pencil")
             ) { _ in
                 self?.editCategory(at: indexPath)
             }
             
             let deleteAction = UIAction(
-                title: "Удалить",
+                title: NSLocalizedString("Delete", comment: "Delete category"),
                 image: UIImage(systemName: "trash"),
                 attributes: .destructive
             ) { _ in
@@ -328,16 +296,16 @@ extension CategorySelectionViewController: UITableViewDelegate {
     
     private func showDeleteConfirmation(for indexPath: IndexPath) {
         let alert = UIAlertController(
-            title: "Эта категория точно не нужна?",
+            title: NSLocalizedString("Are you sure you don't need this category?", comment: "Delete category confirmation"),
             message: nil,
             preferredStyle: .actionSheet
         )
         
-        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { [weak self] _ in
+        let deleteAction = UIAlertAction(title: NSLocalizedString("Delete", comment: "Delete action"), style: .destructive) { [weak self] _ in
             self?.viewModel.deleteCategory(at: indexPath)
         }
         
-        let cancelAction = UIAlertAction(title: "Отменить", style: .cancel)
+        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: "Cancel action"), style: .cancel)
         
         alert.addAction(deleteAction)
         alert.addAction(cancelAction)

@@ -1,4 +1,5 @@
 import CoreData
+import Foundation
 
 protocol TrackerRecordStoreDelegate: AnyObject {
     func trackerRecordStoreDidUpdate()
@@ -69,8 +70,10 @@ final class TrackerRecordStore: NSObject {
     }
     
     func createRecord(trackerId: UUID, date: Date) throws -> TrackerRecordCoreData {
-        if let existingRecord = try? fetchRecord(trackerId: trackerId, date: date) {
-            return existingRecord
+        // Проверяем, не существует ли уже запись
+        if try fetchRecord(trackerId: trackerId, date: date) != nil {
+            // Запись уже существует, возвращаем существующую (как в референсе - просто игнорируем дубликат)
+            return try fetchRecord(trackerId: trackerId, date: date)!
         }
         
         let trackerRequest = TrackerCoreData.fetchRequest()
@@ -85,7 +88,13 @@ final class TrackerRecordStore: NSObject {
         recordCoreData.tracker = tracker
         
         try context.save()
+        StatisticsService.shared.notifyUpdate()
         return recordCoreData
+    }
+    
+    // Добавляем метод addRecord как в референсе для совместимости
+    func addRecord(trackerId: UUID, date: Date) throws {
+        _ = try createRecord(trackerId: trackerId, date: date)
     }
     
     func fetchRecords() throws -> [TrackerRecordCoreData] {
@@ -129,21 +138,24 @@ final class TrackerRecordStore: NSObject {
         
         context.delete(record)
         try context.save()
+        StatisticsService.shared.notifyUpdate()
     }
     
     func deleteRecords(for trackerId: UUID) throws {
         let records = try fetchRecords(for: trackerId)
         records.forEach { context.delete($0) }
         try context.save()
+        StatisticsService.shared.notifyUpdate()
     }
     
     func convertToRecord(_ recordCoreData: TrackerRecordCoreData) -> TrackerRecord? {
-        guard let id = recordCoreData.id,
+        guard let tracker = recordCoreData.tracker,
+              let trackerId = tracker.id,
               let date = recordCoreData.date else {
             return nil
         }
         
-        return TrackerRecord(id: id, date: date)
+        return TrackerRecord(trackerId: trackerId, date: date)
     }
     
     func convertToRecords(_ recordsCoreData: [TrackerRecordCoreData]) -> Set<TrackerRecord> {

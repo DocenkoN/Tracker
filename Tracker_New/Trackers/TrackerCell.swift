@@ -15,7 +15,7 @@ final class TrackerCell: UICollectionViewCell {
     
     private let emojiLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
+        label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
         label.backgroundColor = UIColor.white.withAlphaComponent(0.3)
         label.layer.cornerRadius = 12
@@ -36,7 +36,9 @@ final class TrackerCell: UICollectionViewCell {
     private let daysLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -44,8 +46,8 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var plusButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "plus"), for: .normal)
-        button.tintColor = .white
         button.layer.cornerRadius = 17
+        button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(plusButtonTapped), for: .touchUpInside)
         return button
@@ -56,8 +58,9 @@ final class TrackerCell: UICollectionViewCell {
         setupViews()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupViews() {
@@ -86,8 +89,8 @@ final class TrackerCell: UICollectionViewCell {
             daysLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
             daysLabel.topAnchor.constraint(equalTo: colorView.bottomAnchor, constant: 16),
             
+            plusButton.topAnchor.constraint(equalTo: colorView.bottomAnchor, constant: 8),
             plusButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
-            plusButton.centerYAnchor.constraint(equalTo: daysLabel.centerYAnchor),
             plusButton.widthAnchor.constraint(equalToConstant: 34),
             plusButton.heightAnchor.constraint(equalToConstant: 34)
         ])
@@ -98,27 +101,44 @@ final class TrackerCell: UICollectionViewCell {
         colorView.backgroundColor = tracker.color
         emojiLabel.text = tracker.emoji
         nameLabel.text = tracker.name
-        plusButton.backgroundColor = tracker.color
+        plusButton.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
+        plusButton.tintColor = tracker.color
         
         let daysText: String
-        if days % 10 == 1 && days % 100 != 11 {
-            daysText = "\(days) день"
-        } else if (days % 10 >= 2 && days % 10 <= 4) && !(days % 100 >= 12 && days % 100 <= 14) {
-            daysText = "\(days) дня"
+        if days == 1 {
+            let dayString = NSLocalizedString("day", comment: "Day singular")
+            daysText = "\(days) \(dayString)"
         } else {
-            daysText = "\(days) дней"
+            // Для русского языка нужна правильная форма множественного числа
+            let locale = Locale.current
+            if locale.language.languageCode?.identifier == "ru" {
+                // Русский язык: 2-4 дня, 5+ дней
+                if (days % 10 >= 2 && days % 10 <= 4) && !(days % 100 >= 12 && days % 100 <= 14) {
+                    daysText = "\(days) \(NSLocalizedString("days_plural", comment: "Days 2-4"))"
+                } else {
+                    daysText = "\(days) \(NSLocalizedString("days", comment: "Days 5+"))"
+                }
+            } else {
+                // Английский и другие языки: просто days
+                daysText = "\(days) \(NSLocalizedString("days", comment: "Days plural"))"
+            }
         }
         daysLabel.text = daysText
         
         plusButton.isEnabled = !isFutureDate
         
+        let plusImage = UIImage(systemName: "plus")?.withRenderingMode(.alwaysTemplate)
+        let doneImage = UIImage(systemName: "checkmark")?.withRenderingMode(.alwaysTemplate)
+        
         if isCompleted {
-            plusButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
-            plusButton.alpha = 0.3
+            plusButton.setImage(doneImage, for: .normal)
         } else {
-            plusButton.setImage(UIImage(systemName: "plus"), for: .normal)
-            plusButton.alpha = isFutureDate ? 0.3 : 1.0
+            plusButton.setImage(plusImage, for: .normal)
         }
+        
+        plusButton.alpha = isFutureDate ? 0.3 : 1.0
     }
     
     @objc private func plusButtonTapped() {
