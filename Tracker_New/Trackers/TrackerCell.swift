@@ -101,27 +101,26 @@ final class TrackerCell: UICollectionViewCell {
         colorView.backgroundColor = tracker.color
         emojiLabel.text = tracker.emoji
         nameLabel.text = tracker.name
-        plusButton.backgroundColor = UIColor { traitCollection in
-            traitCollection.userInterfaceStyle == .dark ? .black : .white
-        }
-        plusButton.tintColor = tracker.color
+        
+        plusButton.layer.borderWidth = 1.0
+        plusButton.layer.borderColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1.0).cgColor
+        
+        plusButton.backgroundColor = tracker.color
+        plusButton.tintColor = .white
         
         let daysText: String
         if days == 1 {
             let dayString = NSLocalizedString("day", comment: "Day singular")
             daysText = "\(days) \(dayString)"
         } else {
-            // Для русского языка нужна правильная форма множественного числа
             let locale = Locale.current
             if locale.language.languageCode?.identifier == "ru" {
-                // Русский язык: 2-4 дня, 5+ дней
                 if (days % 10 >= 2 && days % 10 <= 4) && !(days % 100 >= 12 && days % 100 <= 14) {
                     daysText = "\(days) \(NSLocalizedString("days_plural", comment: "Days 2-4"))"
                 } else {
                     daysText = "\(days) \(NSLocalizedString("days", comment: "Days 5+"))"
                 }
             } else {
-                // Английский и другие языки: просто days
                 daysText = "\(days) \(NSLocalizedString("days", comment: "Days plural"))"
             }
         }
@@ -134,16 +133,20 @@ final class TrackerCell: UICollectionViewCell {
         
         if isCompleted {
             plusButton.setImage(doneImage, for: .normal)
+            plusButton.alpha = isFutureDate ? 0.3 : 0.3
         } else {
             plusButton.setImage(plusImage, for: .normal)
+            plusButton.alpha = isFutureDate ? 0.3 : 1.0
         }
-        
-        plusButton.alpha = isFutureDate ? 0.3 : 1.0
     }
     
     @objc private func plusButtonTapped() {
         guard let trackerId = trackerId else { return }
         delegate?.didTapPlusButton(for: trackerId)
+    }
+    
+    func getColorView() -> UIView {
+        return colorView
     }
 }
 

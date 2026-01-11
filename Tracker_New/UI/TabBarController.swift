@@ -10,8 +10,6 @@ final class TabBarController: UITabBarController {
         setupAppearance()
     }
     
-    // Deprecated in iOS 17.0, but kept for compatibility with older iOS versions
-    // Dynamic colors update automatically in iOS 17+
     @available(iOS, deprecated: 17.0, message: "Dynamic colors update automatically in iOS 17+")
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
@@ -59,11 +57,13 @@ final class TabBarController: UITabBarController {
     private func updateAppearance() {
         tabBar.backgroundColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : .white
+                UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0) :
+                UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1.0)
         }
         tabBar.barTintColor = UIColor { traitCollection in
             traitCollection.userInterfaceStyle == .dark ? 
-                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : .white
+                UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0) :
+                UIColor(red: 255/255, green: 255/255, blue: 255/255, alpha: 1.0)
         }
         tabBar.tintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
         tabBar.unselectedItemTintColor = UIColor(red: 0.68, green: 0.69, blue: 0.71, alpha: 1.0)
@@ -72,10 +72,8 @@ final class TabBarController: UITabBarController {
     }
     
     private func updateTopBorder() {
-        // Удаляем старую границу
         topBorder?.removeFromSuperlayer()
         
-        // Создаем новую границу
         let border = CALayer()
         border.frame = CGRect(x: 0, y: 0, width: tabBar.frame.width, height: 0.5)
         

@@ -74,13 +74,15 @@ extension FiltersViewController: UITableViewDataSource {
         }
         cell.selectionStyle = .none
         
-        // Показываем галочку для выбранного фильтра, кроме "Все трекеры" и "Трекеры на сегодня"
-        // Эти варианты - сброс фильтрации до стандартного состояния, а не установка нового фильтра
-        if let currentFilter = currentFilter,
-           filter == currentFilter,
-           filter != .all && filter != .today {
-            cell.accessoryType = .checkmark
-            cell.tintColor = .systemBlue
+        // Показываем галочку только для "Завершённые" и "Не завершённые"
+        // Для "Все трекеры" и "Трекеры на сегодня" галочку не показываем (согласно чек-листу)
+        if let currentFilter = currentFilter, filter == currentFilter {
+            if filter == .completed || filter == .notCompleted {
+                cell.accessoryType = .checkmark
+                cell.tintColor = .systemBlue
+            } else {
+                cell.accessoryType = .none
+            }
         } else {
             cell.accessoryType = .none
         }
