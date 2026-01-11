@@ -15,7 +15,7 @@ final class TrackerCell: UICollectionViewCell {
     
     private let emojiLabel: UILabel = {
         let label = UILabel()
-        label.font = .systemFont(ofSize: 16)
+        label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textAlignment = .center
         label.backgroundColor = UIColor.white.withAlphaComponent(0.3)
         label.layer.cornerRadius = 12
@@ -36,7 +36,9 @@ final class TrackerCell: UICollectionViewCell {
     private let daysLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .black
+        label.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -56,8 +58,9 @@ final class TrackerCell: UICollectionViewCell {
         setupViews()
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupViews() {
@@ -124,6 +127,10 @@ final class TrackerCell: UICollectionViewCell {
     @objc private func plusButtonTapped() {
         guard let trackerId = trackerId else { return }
         delegate?.didTapPlusButton(for: trackerId)
+    }
+    
+    func getColorView() -> UIView {
+        return colorView
     }
 }
 

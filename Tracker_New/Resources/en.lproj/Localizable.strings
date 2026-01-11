@@ -1,0 +1,81 @@
+/* 
+  Localizable.strings (English)
+  Tracker_New
+
+  Created by Localization
+*/
+
+// Main Screen
+"Trackers" = "Trackers";
+"Statistics" = "Statistics";
+"Filters" = "Filters";
+"Search" = "Search";
+"What will we track?" = "What will we track?";
+"Nothing found" = "Nothing found";
+
+// Days
+"day" = "day";
+"days" = "days";
+"days_plural" = "days";
+
+// Filter Options
+"All trackers" = "All trackers";
+"Trackers for today" = "Trackers for today";
+"Completed" = "Completed";
+"Not completed" = "Not completed";
+
+// Tracker Creation
+"New habit" = "New habit";
+"Edit habit" = "Edit habit";
+"Enter tracker name" = "Enter tracker name";
+"Category" = "Category";
+"Schedule" = "Schedule";
+"Emoji" = "Emoji";
+"Color" = "Color";
+"Cancel" = "Cancel";
+"Create" = "Create";
+"Save" = "Save";
+"Done" = "Done";
+"Every day" = "Every day";
+
+// Category
+"New category" = "New category";
+"Edit category" = "Edit category";
+"Enter category name" = "Enter category name";
+"Add category" = "Add category";
+"Habits and events can be grouped by meaning" = "Habits and events can be\ngrouped by meaning";
+
+// Schedule
+"Monday" = "Monday";
+"Tuesday" = "Tuesday";
+"Wednesday" = "Wednesday";
+"Thursday" = "Thursday";
+"Friday" = "Friday";
+"Saturday" = "Saturday";
+"Sunday" = "Sunday";
+
+// Context Menu
+"Edit" = "Edit";
+"Delete" = "Delete";
+
+// Alerts
+"Are you sure you want to delete tracker?" = "Are you sure you want to delete tracker?";
+"Delete" = "Delete";
+"Cancel" = "Cancel";
+"Error" = "Error";
+"Failed to delete tracker" = "Failed to delete tracker: %@";
+"OK" = "OK";
+"Are you sure you don't need this category?" = "Are you sure you don't need this category?";
+
+// Statistics
+"Nothing to analyze yet" = "Nothing to analyze yet";
+"Best period" = "Best period";
+"Ideal days" = "Ideal days";
+"Trackers completed" = "Trackers completed";
+"Average value" = "Average value";
+
+// Onboarding
+"This is technology!" = "This is technology!";
+"Track only what you want" = "Track only what\nyou want";
+"Even if it's not liters of water and yoga" = "Even if it's not\nliters of water and yoga";
+

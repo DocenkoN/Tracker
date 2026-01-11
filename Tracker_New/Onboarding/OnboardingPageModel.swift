@@ -9,12 +9,12 @@ struct OnboardingPageModel {
 extension OnboardingPageModel {
     static let pages: [OnboardingPageModel] = [
         OnboardingPageModel(
-            title: "Отслеживайте только\nто, что хотите",
+            title: NSLocalizedString("Track only what you want", comment: "Onboarding page 1"),
             backgroundImageName: "backgr_1",
             emojis: ["🥰", "✨"]
         ),
         OnboardingPageModel(
-            title: "Даже если это\nне литры воды и йога",
+            title: NSLocalizedString("Even if it's not liters of water and yoga", comment: "Onboarding page 2"),
             backgroundImageName: "backgr_2",
             emojis: ["🔥", "🥳"]
         )

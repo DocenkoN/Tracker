@@ -11,39 +11,40 @@ final class NewCategoryViewController: UIViewController {
     var editingIndexPath: IndexPath?
     var initialCategoryTitle: String?
     
-    private lazy var titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Новая категория"
-        label.font = .systemFont(ofSize: 16, weight: .medium)
-        label.textColor = .black
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
     private lazy var categoryTextField: UITextField = {
         let textField = UITextField()
-        textField.placeholder = "Введите название категории"
-        textField.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
-        textField.layer.cornerRadius = 16
-        textField.font = .systemFont(ofSize: 17)
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.autocorrectionType = .no
-        textField.returnKeyType = .done
+        textField.placeholder = NSLocalizedString("Enter category name", comment: "Category name placeholder")
+        textField.font = .systemFont(ofSize: 17, weight: .regular)
+        textField.textColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : .black
+        }
         textField.clearButtonMode = .whileEditing
+        textField.returnKeyType = .done
+        textField.enablesReturnKeyAutomatically = true
+        textField.translatesAutoresizingMaskIntoConstraints = false
         textField.delegate = self
-        
-        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 75))
-        textField.leftView = paddingView
-        textField.leftViewMode = .always
-        
         return textField
+    }()
+    
+    private lazy var backgroundContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? 
+                UIColor(red: 28/255, green: 28/255, blue: 30/255, alpha: 1.0) : 
+                UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0)
+        }
+        view.layer.masksToBounds = true
+        view.layer.cornerRadius = 16
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
     
     private lazy var doneButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitle(NSLocalizedString("Done", comment: "Done button"), for: .normal)
+        button.setTitleColor(UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = UIColor(red: 174/255, green: 175/255, blue: 180/255, alpha: 1.0)
         button.layer.cornerRadius = 16
@@ -57,9 +58,8 @@ final class NewCategoryViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         
-        // Если редактируем - обновляем заголовок и заполняем поле
+        // Если редактируем - заполняем поле
         if editingIndexPath != nil {
-            titleLabel.text = "Редактирование категории"
             if let initialTitle = initialCategoryTitle {
                 categoryTextField.text = initialTitle
                 textFieldDidChange() // Обновляем состояние кнопки "Готово"
@@ -86,20 +86,33 @@ final class NewCategoryViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .black : .white
+        }
         
-        view.addSubview(titleLabel)
-        view.addSubview(categoryTextField)
+        let title = editingIndexPath != nil ? NSLocalizedString("Edit category", comment: "Edit category title") : NSLocalizedString("New category", comment: "New category title")
+        navigationItem.title = title
+        navigationController?.navigationBar.titleTextAttributes = [
+            .foregroundColor: UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ? .white : .black
+            },
+            .font: UIFont.systemFont(ofSize: 16, weight: .medium)
+        ]
+        navigationItem.hidesBackButton = true
+        
+        view.addSubview(backgroundContainerView)
+        backgroundContainerView.addSubview(categoryTextField)
         view.addSubview(doneButton)
         
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 27),
-            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            backgroundContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            backgroundContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            backgroundContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            backgroundContainerView.heightAnchor.constraint(equalToConstant: 75),
             
-            categoryTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            categoryTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            categoryTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            categoryTextField.heightAnchor.constraint(equalToConstant: 75),
+            categoryTextField.leadingAnchor.constraint(equalTo: backgroundContainerView.leadingAnchor, constant: 16),
+            categoryTextField.trailingAnchor.constraint(equalTo: backgroundContainerView.trailingAnchor, constant: -12),
+            categoryTextField.centerYAnchor.constraint(equalTo: backgroundContainerView.centerYAnchor),
             
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -115,10 +128,19 @@ final class NewCategoryViewController: UIViewController {
         doneButton.isEnabled = hasText
         
         let inactiveColor = UIColor(red: 174/255, green: 175/255, blue: 180/255, alpha: 1.0)
-        let activeColor = UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        let activeColor = UIColor { traitCollection in
+            traitCollection.userInterfaceStyle == .dark ? .white : UIColor(red: 26/255, green: 27/255, blue: 34/255, alpha: 1.0)
+        }
         
         UIView.animate(withDuration: 0.2) {
             self.doneButton.backgroundColor = hasText ? activeColor : inactiveColor
+            self.doneButton.setTitleColor(UIColor { traitCollection in
+                if hasText {
+                    return traitCollection.userInterfaceStyle == .dark ? .black : .white
+                } else {
+                    return .white
+                }
+            }, for: .normal)
         }
     }
     
