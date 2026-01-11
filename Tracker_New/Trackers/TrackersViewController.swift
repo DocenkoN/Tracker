@@ -92,7 +92,11 @@ final class TrackersViewController: UIViewController {
         controller.obscuresBackgroundDuringPresentation = false
         controller.hidesNavigationBarDuringPresentation = false
         if let searchTextField = controller.searchBar.value(forKey: "searchField") as? UITextField {
-            searchTextField.backgroundColor = UIColor(red: 118/255, green: 118/255, blue: 128/255, alpha: 0.24)
+            searchTextField.backgroundColor = UIColor { traitCollection in
+                traitCollection.userInterfaceStyle == .dark ?
+                    UIColor(red: 118/255, green: 118/255, blue: 128/255, alpha: 0.24) :
+                    UIColor(red: 118/255, green: 118/255, blue: 128/255, alpha: 0.12)
+            }
             searchTextField.layer.cornerRadius = 10
             searchTextField.clipsToBounds = true
         }

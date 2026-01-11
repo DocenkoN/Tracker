@@ -77,12 +77,8 @@ extension FiltersViewController: UITableViewDataSource {
         // Показываем галочку только для "Завершённые" и "Не завершённые"
         // Для "Все трекеры" и "Трекеры на сегодня" галочку не показываем (согласно чек-листу)
         if let currentFilter = currentFilter, filter == currentFilter {
-            if filter == .completed || filter == .notCompleted {
-                cell.accessoryType = .checkmark
-                cell.tintColor = .systemBlue
-            } else {
-                cell.accessoryType = .none
-            }
+            cell.accessoryType = .checkmark
+            cell.tintColor = UIColor(red: 0.22, green: 0.45, blue: 0.91, alpha: 1.0)
         } else {
             cell.accessoryType = .none
         }
